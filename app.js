@@ -9,6 +9,8 @@ var session = require("express-session");
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/user");
 const educationalRouter = require("./routes/educational");
+const examinationRouter = require('./routes/examination');
+const schoolRouter = require('./routes/school');
 
 const app = express();
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
@@ -37,6 +39,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/user", usersRouter);
 app.use("/educational", educationalRouter);
+app.use("/examination", examinationRouter);
+app.use("/school", schoolRouter);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

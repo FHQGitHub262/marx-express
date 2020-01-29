@@ -14,6 +14,21 @@ router.get("/teachers", (req, res) => {
   });
 });
 
+router.get("/subjects", (req, res) => {
+  console.log(req.query, req.session);
+  res.json({
+    success: true,
+    data: [
+      {
+        id: 1,
+        name: "TEST SUBJECT",
+        chapterNum: 12,
+        questionNum: 12
+      }
+    ]
+  });
+});
+
 router.get("/courses", (req, res) => {
   console.log(req.query, req.session);
   res.json({
