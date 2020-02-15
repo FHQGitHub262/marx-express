@@ -1,36 +1,49 @@
 var express = require("express");
 var router = express.Router();
 
+const User = require("../models/models/User");
+
 /* GET users listing. */
 router.get("/", function(req, res, next) {
   res.send("respond with a resource");
 });
 
+// #DONE
 router.post("/info", (req, res) => {
+  console.log(req.session.user);
   res.json({
-    success: Boolean(req.session.user),
+    success:
+      Boolean(req.session.user) && Object.keys(req.session.user).length !== 0,
     data: req.session.user || {}
   });
 });
 
-router.post("/login", (req, res) => {
+// #DONE
+router.post("/login", async (req, res) => {
   if (req.session.user) {
-    console.log("here");
-
     res.json({
       success: true,
       data: req.session.user
     });
   } else {
-    console.log(req.body);
-    const userInfo = {
-      name: "zuoteng.jzt",
-      privilege: ["教师"],
-      privilegeCode: 1
-    };
+    const [success, userInfo] = await User.login(
+      req.body.uuid,
+      req.body.password
+    );
+    console.log(userInfo);
+
     req.session.user = userInfo;
-    res.json({ success: true, data: userInfo });
+    res.json({ success, data: userInfo });
   }
+});
+
+router.post("/resetPassword", async (req, res) => {
+  // #TODO 去掉对应登录态
+  const result = await User.resetPassword(req.body.uuid);
+  console.log(result);
+  res.json({
+    success: true
+  });
 });
 
 module.exports = router;

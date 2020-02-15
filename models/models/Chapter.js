@@ -1,5 +1,9 @@
+const path = require("path");
 const sequelize = require("../db");
 const Sequelize = require("sequelize");
+const Util = require(path.resolve(__dirname, "../util"));
+
+const Subject = require("./Subject");
 
 class Chapter extends Sequelize.Model {}
 Chapter.init(
@@ -14,4 +18,27 @@ Chapter.init(
   { sequelize, modelName: "Chapter" }
 );
 
-module.exports = Chapter;
+exports.create = async (name, subjectId) => {
+  const subject = await Subject.model.findOne({
+    where: {
+      id: subjectId
+    }
+  });
+  await subject.update({
+    majorNum: subject.dataValues.majorNum + 1
+  });
+  return await subject.createChapter({
+    name,
+    id: Util.uuid()
+  });
+};
+
+exports.getAll = async subjectId => {
+  const subject = await Subject.model.findOne({
+    where: {
+      id: subjectId
+    }
+  });
+  return await subject.getChapters();
+};
+exports.model = Chapter;

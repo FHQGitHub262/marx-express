@@ -2,6 +2,10 @@ var createError = require("http-errors");
 var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
+
+const models = require("./models/index");
+const db = require("./models/db");
+db.sync();
 const cors = require("cors");
 var logger = require("morgan");
 var session = require("express-session");
@@ -9,11 +13,25 @@ var session = require("express-session");
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/user");
 const educationalRouter = require("./routes/educational");
-const examinationRouter = require('./routes/examination');
-const schoolRouter = require('./routes/school');
+const examinationRouter = require("./routes/examination");
+const schoolRouter = require("./routes/school");
 
 const app = express();
-app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
+// app.use(
+//   bodyParser.urlencoded({
+//     extended: false,
+//     type: "application/x-www-form-urlencoded"
+//   })
+// );
+app.use(
+  cors({
+    credentials: true,
+    origin: [
+      // "http://192.168.0.103:3000",
+      /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:3000/
+    ]
+  })
+);
 app.set("trust proxy", 1); // trust first proxy
 app.use(
   session({

@@ -9,7 +9,8 @@ const sequelize = new Sequelize(
       max: 5,
       min: 0,
       idle: 30000
-    }
+    },
+    timezone: "+08:00"
   }
 );
 
