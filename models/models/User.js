@@ -12,7 +12,7 @@ User.init(
       unique: true
     },
     passwd: Sequelize.STRING(100),
-    idnumber: Sequelize.INTEGER(4),
+    idnumber: { type: Sequelize.INTEGER(4), unique: true },
     privilege: Sequelize.STRING(100),
     name: Sequelize.STRING(16)
   },

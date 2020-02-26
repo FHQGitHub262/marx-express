@@ -64,7 +64,6 @@ exports.create = async (
     })()
   ]);
   if (chapter) {
-    console.log("here", chapter.addQuestion, chapter.addQuestions);
     await chapter.addQuestion(question);
   }
   return question;

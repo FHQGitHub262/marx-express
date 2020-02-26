@@ -53,10 +53,10 @@ model.Course.model.belongsToMany(model.Student.model, {
   through: "JoinCourse"
   // otherKey: "userUuid"
 });
-// model.Student.model.belongsToMany(model.Course.model, {
-//   through: "JoinCourse"
-//   // otherKey: "userUuid"
-// });
+model.Student.model.belongsToMany(model.Course.model, {
+  through: "JoinCourse"
+  // otherKey: "userUuid"
+});
 // 老师可以负责多个教学班
 model.Course.model.belongsToMany(model.Teacher.model, {
   through: "GrantCourse"

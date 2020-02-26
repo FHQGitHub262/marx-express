@@ -48,7 +48,7 @@ exports.addStudents = async (courseId, studentList) => {
   });
   const students = await Student.model.findAll({
     where: {
-      id: {
+      UserUuid: {
         [Op.in]: studentList
       }
     }
@@ -78,6 +78,15 @@ exports.getAll = async subjectId => {
   });
   console.log(subject);
   return subject.getCourses();
+};
+
+exports.getExams = async courseId => {
+  const theCourse = await Course.findOne({
+    where: {
+      id: courseId
+    }
+  });
+  return await theCourse.getExams();
 };
 
 exports.model = Course;

@@ -21,10 +21,11 @@ const testStudent = [
 ];
 const testSubject = "63e69c20-44d2-11ea-a97d-39841d8140c6";
 const testCourse = "f84fa9a0-44d3-11ea-b75c-43fdac80c98b";
-const testChapter = "4ea1f980-4fbe-11ea-8071-1bc8799ab4c4";
+const testChapter = "8fac30c0-55f0-11ea-bba0-e724d32fa22b";
 const testTeacher = "0404c6f0-4663-11ea-b9a7-4753c60a4738";
 // const model = require("./");
 const link = require("./db");
+const cache = require("./cache");
 
 const init = async () => {
   /* 用户关系 */
@@ -42,18 +43,21 @@ const init = async () => {
   // Teacher.getAll()
 
   // 创建学生
-  // Student.createStudent("123456", "16041519", "Test 1").then(res =>
+  // Student.createStudent("123456", "17041802", "测试学生").then(res =>
   //   console.log(res)
   // );
   // Student.createStudent("123456", "17041802", "Test 2").then(res =>
   //   console.log(res)
   // );
-  Student.getAll({
-    AdministrationClassId: "05fe8bd0-4fbe-11ea-b037-1555c694ae5a"
-  })
-    .then(res => res.map(item => item.dataValues))
-    .then(res => console.log(res));
+  // Student.getAll({
+  //   AdministrationClassId: "05fe8bd0-4fbe-11ea-b037-1555c694ae5a"
+  // })
+  //   .then(res => res.map(item => item.dataValues))
+  //   .then(res => console.log(res));
 
+  // Student.getCourse("5c7c4e70-5487-11ea-8972-f5283b058347").then(res =>
+  //   console.log(res)
+  // );
   // 登录测试
   // User.login("16041519", "aptx4869").then(res => console.log(res));
   // User.login("16041519", "123456").then(res => console.log(res));
@@ -89,8 +93,8 @@ const init = async () => {
   // .then(res => console.log(res));
 
   // 在教学班中添加学生
-  // AdministrationClass.addStudents("05fe8bd0-4fbe-11ea-b037-1555c694ae5a", [
-  //   "975dbb10-4fc7-11ea-b14c-8bb063c7b14f"
+  // AdministrationClass.addStudents("7c1ab4d0-5485-11ea-aeb1-3f47908e677d", [
+  //   "5c7c4e70-5487-11ea-8972-f5283b058347"
   // ]);
 
   // 创建学科
@@ -225,6 +229,9 @@ const init = async () => {
   // Course.getAll("ae9d8cd0-4f20-11ea-a5f7-19dffc0cbaf8").then(res =>
   //   console.log(res)
   // );
+  // Course.getExams("f46f6080-549d-11ea-b26b-a1c8bfea84be").then(res =>
+  //   console.log(res)
+  // );
 
   //创建试卷
   // Paper.createPaper("测试考卷-大考", true).then(res =>
@@ -276,6 +283,12 @@ const init = async () => {
   //   }
   // });
   // 给考试分配试卷
+
+  // 考试准备
+  // Exam.prepare("776c8630-561e-11ea-bac0-ff7f14b2e569");
+  // cache
+  //   .hashGet("776c8630-561e-11ea-bac0-ff7f14b2e569")
+  //   .then(res => console.log(res));
 };
 
 init();

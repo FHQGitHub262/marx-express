@@ -15,6 +15,7 @@ const usersRouter = require("./routes/user");
 const educationalRouter = require("./routes/educational");
 const examinationRouter = require("./routes/examination");
 const schoolRouter = require("./routes/school");
+const clientRouter = require("./routes/client");
 
 const app = express();
 // app.use(
@@ -30,7 +31,8 @@ app.use(
       // "http://192.168.0.103:3000",
       /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:3000/,
       /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:5000/,
-      /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:4000/
+      /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:4000/,
+      /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:8080/
     ]
   })
 );
@@ -61,6 +63,7 @@ app.use("/user", usersRouter);
 app.use("/educational", educationalRouter);
 app.use("/examination", examinationRouter);
 app.use("/school", schoolRouter);
+app.use("/client", clientRouter);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

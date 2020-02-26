@@ -6,7 +6,7 @@ class Teacher extends Sequelize.Model {}
 Teacher.init(
   {
     name: Sequelize.STRING(100),
-    idNumber: Sequelize.STRING(100)
+    idNumber: { type: Sequelize.STRING(100), unique: true, primaryKey: true }
   },
   { sequelize, modelName: "Teacher" }
 );
@@ -23,7 +23,7 @@ exports.createTeacher = async (password, idNumber, name) => {
 
 exports.getAll = () => {
   return Teacher.findAll({
-    attributes: ["idNumber", "name", "UserUuid", "id"]
+    attributes: ["idNumber", "name", "UserUuid"]
   });
 };
 

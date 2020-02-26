@@ -20,21 +20,21 @@ router.post("/info", (req, res) => {
 
 // #DONE
 router.post("/login", async (req, res) => {
-  if (req.session.user) {
-    res.json({
-      success: true,
-      data: req.session.user
-    });
-  } else {
-    const [success, userInfo] = await User.login(
-      req.body.uuid,
-      req.body.password
-    );
-    console.log(userInfo);
+  // if (req.session.user) {
+  //   res.json({
+  //     success: true,
+  //     data: req.session.user
+  //   });
+  // } else {
+  const [success, userInfo] = await User.login(
+    req.body.uuid,
+    req.body.password
+  );
+  console.log(userInfo);
 
-    req.session.user = userInfo;
-    res.json({ success, data: userInfo });
-  }
+  req.session.user = userInfo;
+  res.json({ success, data: userInfo });
+  // }
 });
 
 router.post("/resetPassword", async (req, res) => {
