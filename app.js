@@ -18,19 +18,7 @@ const schoolRouter = require("./routes/school");
 const clientRouter = require("./routes/client");
 
 const app = express();
-app.use(
-  cors({
-    credentials: true,
-    origin: [
-      // "http://192.168.0.103:3000",
-      "localhost:8080",
-      /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:3000/,
-      /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:5000/,
-      /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:4000/,
-      /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:8080/
-    ]
-  })
-);
+app.use(cors(require("./config").cors));
 app.set("trust proxy", 1); // trust first proxy
 app.use(
   session({
