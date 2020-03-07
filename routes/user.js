@@ -18,6 +18,11 @@ router.post("/info", (req, res) => {
   });
 });
 
+router.post("/logout", async (req, res) => {
+  req.session.user = {};
+  res.json({ success: true });
+});
+
 // #DONE
 router.post("/login", async (req, res) => {
   // if (req.session.user) {
@@ -44,6 +49,23 @@ router.post("/resetPassword", async (req, res) => {
   res.json({
     success: true
   });
+});
+
+router.post("/set_admin", async (req, res) => {
+  try {
+    if (req.session.user.privilege.indexOf("admin")) {
+      User.updatePrivilege(["admin"], req.body.id);
+      res.json({
+        success: true
+      });
+    } else {
+      throw new Error();
+    }
+  } catch (error) {
+    res.json({
+      success: false
+    });
+  }
 });
 
 module.exports = router;

@@ -3,6 +3,8 @@ const sequelize = require("../db");
 const Sequelize = require("sequelize");
 const Util = require(path.resolve(__dirname, "../util"));
 
+const Teacer = require("./Teacher");
+
 class Subject extends Sequelize.Model {}
 Subject.init(
   {

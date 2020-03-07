@@ -45,12 +45,17 @@ router.post("/createTeacher", async (req, res) => {
 });
 
 router.get("/subjects", async (req, res) => {
-  const query = await Subject.getAll();
+  try {
+    let query = await Subject.getAll();
 
-  res.json({
-    success: true,
-    data: query.map(subject => subject.dataValues)
-  });
+    res.json({
+      success: true,
+      data: query.map(subject => subject.dataValues)
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false });
+  }
 });
 
 router.post("/createSubject", async (req, res) => {
@@ -78,7 +83,13 @@ router.get("/students", async (req, res) => {
 });
 
 router.get("/courses", async (req, res) => {
-  const course = await Course.getAll();
+  let course;
+  if (req.session.user.privilege.indexOf("admin") >= 0) {
+    course = await Course.getAll(req.body.id);
+  } else {
+    console.log("unadmin", req.session.user);
+    course = await Course.getAllForTeacher(req.body.id, req.session.user.uuid);
+  }
   res.json({
     success: true,
     data: course.map(item => item.dataValues)
@@ -105,6 +116,20 @@ router.post("/createCourse", async (req, res) => {
     success: true,
     data: query.dataValues
   });
+});
+
+router.post("/grantCourse", async (req, res) => {
+  try {
+    const grantTeacher = await Course.grantBatchTo(req.body.course, [
+      req.body.teacher
+    ]);
+    res.json({ success: true });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false
+    });
+  }
 });
 
 router.get("/chapters", async (req, res) => {

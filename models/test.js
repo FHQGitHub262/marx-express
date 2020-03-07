@@ -21,7 +21,7 @@ const testStudent = [
 ];
 const testSubject = "63e69c20-44d2-11ea-a97d-39841d8140c6";
 const testCourse = "f84fa9a0-44d3-11ea-b75c-43fdac80c98b";
-const testChapter = "8fac30c0-55f0-11ea-bba0-e724d32fa22b";
+const testChapter = "85184260-5a29-11ea-8b90-85dea84c548a";
 const testTeacher = "0404c6f0-4663-11ea-b9a7-4753c60a4738";
 // const model = require("./");
 const link = require("./db");
@@ -112,17 +112,6 @@ const init = async () => {
   // Chapter.getAll(testSubject)
   //   .then(res => console.log(res => res.map(elem => elem.dataValues)))
   //   .then(res => console.log(res));
-
-  // 创建题目
-  // Question.create({
-  //   title: "test",
-  //   right: "A",
-  //   detail: {
-  //     A: "aaa",
-  //     B: "bbb",
-  //     C: "CC"
-  //   }
-  // });
 
   // Question.create(
   //   {
@@ -285,10 +274,25 @@ const init = async () => {
   // 给考试分配试卷
 
   // 考试准备
-  // Exam.prepare("776c8630-561e-11ea-bac0-ff7f14b2e569");
+  // Exam.prepare("af345990-5d4d-11ea-b561-0b01b59f44b1");
   // cache
   //   .hashGet("776c8630-561e-11ea-bac0-ff7f14b2e569")
   //   .then(res => console.log(res));
+  // Exam.finishup(
+  //   "09e1df40-5a2c-11ea-960d-b1216cdfb547",
+  //   "126063c0-5a28-11ea-8880-b960ec039600",
+  //   {
+  //     a: "b"
+  //   }
+  // ).then(res => console.log(res));
+  // Student.getExams(
+  //   "126063c0-5a28-11ea-8880-b960ec039600",
+  //   "f9d7b0d0-5a2a-11ea-8b90-85dea84c5482"
+  // ).then(res => console.log(res));
+  // Exam.getReview(
+  //   "af345990-5d4d-11ea-b561-0b01b59f44b1",
+  //   "126063c0-5a28-11ea-8880-b960ec039600"
+  // ).then(res => console.log(res));
 };
 
 init();

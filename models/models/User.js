@@ -60,19 +60,29 @@ exports.resetPassword = uuid => {
 };
 
 exports.updatePrivilege = async (newPrivilege, uuid) => {
-  if (Util.checkPrivilege(newPrivilege)) {
-    const [res] = await User.update(
-      {
-        privilege: JSON.stringify(newPrivilege)
-      },
-      {
+  try {
+    if (Util.checkPrivilege(newPrivilege)) {
+      const theUser = await User.findOne({
         where: {
-          uuid
+          uuid: uuid
         }
-      }
-    );
-    return res > 0;
-  } else {
+      });
+      const res = await theUser.update({
+        privilege: JSON.stringify(
+          Array.from(
+            new Set([
+              ...JSON.parse(theUser.dataValues.privilege),
+              ...newPrivilege
+            ])
+          )
+        )
+      });
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log(error);
     return false;
   }
 };

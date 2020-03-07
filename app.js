@@ -7,8 +7,8 @@ const models = require("./models/index");
 const db = require("./models/db");
 db.sync();
 const cors = require("cors");
-var logger = require("morgan");
-var session = require("express-session");
+const logger = require("morgan");
+const session = require("express-session");
 
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/user");
@@ -18,17 +18,12 @@ const schoolRouter = require("./routes/school");
 const clientRouter = require("./routes/client");
 
 const app = express();
-// app.use(
-//   bodyParser.urlencoded({
-//     extended: false,
-//     type: "application/x-www-form-urlencoded"
-//   })
-// );
 app.use(
   cors({
     credentials: true,
     origin: [
       // "http://192.168.0.103:3000",
+      "localhost:8080",
       /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:3000/,
       /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:5000/,
       /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:4000/,
@@ -46,6 +41,29 @@ app.use(
   })
 );
 app.use(logger("dev"));
+
+const multer = require("multer");
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, "./uploads/");
+  },
+  filename: function(req, file, cb) {
+    console.log();
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+
+const upload = multer({ storage: storage });
+
+app.post("/upload", upload.single("recfile"), (req, res) => {
+  console.log("req body", req.body);
+  console.log("req file", req.file);
+  if (req.file.fieldname) {
+    res.status(200).json({ success: true, data: req.file.filename });
+  } else {
+    res.json({ success: false });
+  }
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -59,6 +77,7 @@ app.use(express.static(path.join(__dirname, "public")));
 //   }
 // });
 app.use("/", indexRouter);
+
 app.use("/user", usersRouter);
 app.use("/educational", educationalRouter);
 app.use("/examination", examinationRouter);

@@ -6,12 +6,12 @@ const log = (...args) => {
 };
 
 client.on("error", err => {
-  console.log("Error " + err);
+  log("Error " + err);
 });
 
 client.on("connect", async e => {
   log("Connect");
-  hashGet("776c8630-561e-11ea-bac0-ff7f14b2e569").then(res => log(res));
+  // hashGet("776c8630-561e-11ea-bac0-ff7f14b2e569").then(res => log(res));
   // set("test", "123456").then(res => log(res));
   // get("test").then(res => log(res));
   // hashSet("examId", {
@@ -80,8 +80,22 @@ const get = key => {
   });
 };
 
+const hashDel = keyName => {
+  return new Promise((resolve, reject) => {
+    client.del(keyName, res => {
+      resolve();
+    });
+  });
+};
+
 exports.hashGet = hashGet;
 exports.hashSet = hashSet;
 exports.set = set;
 exports.get = get;
 exports.client = client;
+exports.hashDel = hashGet;
+
+// this.hashSet("exam", {
+//   st2: "123456"
+// }).then(res => console.log(res));
+// hashDel("examId");

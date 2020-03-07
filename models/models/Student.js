@@ -1,6 +1,7 @@
 const sequelize = require("../db");
 const Sequelize = require("sequelize");
 const User = require("./User");
+const Course = require("./Course");
 
 class Student extends Sequelize.Model {}
 Student.init(
@@ -12,7 +13,7 @@ Student.init(
 );
 
 exports.createStudent = async (password, idNumber, name) => {
-  const user = await User.createUser(password, idNumber, ["teacher"], name);
+  const user = await User.createUser(password, idNumber, ["student"], name);
   const student = await Student.create({
     name,
     idNumber
@@ -34,6 +35,25 @@ exports.getCourse = async studentId => {
   if (theStudent)
     return await theStudent.getCourses().map(item => item.dataValues);
   else return [];
+};
+
+exports.getExams = async (studentId, courseId) => {
+  const theStudent = await Student.findOne({
+    where: {
+      UserUuid: studentId
+    }
+  });
+  return await theStudent.getExams({
+    through: {
+      where: {
+        ExamId: {
+          [Sequelize.Op.in]: (await Course.getExams(courseId)).map(
+            item => item.dataValues.id
+          )
+        }
+      }
+    }
+  });
 };
 
 exports.model = Student;

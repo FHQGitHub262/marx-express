@@ -8,6 +8,8 @@ const Paper = require("./Paper");
 const Student = require("./Student");
 const Course = require("./Course");
 
+const Task = require("../../schedule/index");
+
 class Exam extends Sequelize.Model {}
 Exam.init(
   {
@@ -63,9 +65,31 @@ exports.create = async config => {
   // 创建examPlan
   await Promise.all([
     exam.setPaper(paper),
-    exam.setStudents(students),
+    exam.setStudents(students, {
+      through: {
+        status: "BEFORE"
+      }
+    }),
     exam.setCourses(courses)
   ]);
+  // 创建定时任务，考试前一天prepare考试
+  Task.scheduleToDo(
+    "prepare_exam",
+    new Date(config.startAt).getTime() - 24 * 60 * 60 * 1000,
+    JSON.stringify({
+      id: exam.dataValues.id
+    })
+  );
+
+  // 创建定时任务，考试结束后1h，删除redis里相关内容
+  Task.scheduleToDo(
+    "cleanup_exam",
+    new Date(config.endAt).getTime() + 60 * 1000 * 60,
+    JSON.stringify({
+      id: exam.dataValues.id
+    })
+  );
+
   return exam;
 };
 
@@ -138,5 +162,43 @@ exports.prepare = async examId => {
     // status: "READY"
   });
   // 添加定时任务，定时删除指定文件夹
+};
+
+exports.finishup = async (examId, studentId, examDeatail) => {
+  const theExam = await Exam.findOne({
+    where: {
+      id: examId
+    }
+  });
+  const theStudent = await Student.model.findOne({
+    where: {
+      UserUuid: studentId
+    }
+  });
+  return await theExam.addStudent(theStudent, {
+    through: {
+      raw: JSON.stringify(examDeatail),
+      status: "FIN"
+    }
+  });
+};
+
+exports.getReview = async (examId, studentId) => {
+  const theExam = await Exam.findOne({
+    where: {
+      id: examId
+    }
+  });
+  return (
+    await theExam.getStudents({
+      where: {
+        UserUuid: studentId
+      }
+    })
+  ).map(item => item.dataValues.AnswerExam);
+};
+
+exports.judge = async examId => {
+  console.log("exam.judge");
 };
 exports.model = Exam;

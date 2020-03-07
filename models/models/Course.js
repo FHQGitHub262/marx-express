@@ -69,15 +69,54 @@ exports.grantTo = async (courseId, teacherList) => {
       }
     }
   });
-  return theCourse.setTeachers(teachers);
+  return theCourse.addTeachers(teachers);
+};
+
+exports.grantBatchTo = async (courseIds, teacherList) => {
+  const theCourses = await Course.findAll({
+    where: {
+      id: {
+        [Sequelize.Op.in]: courseIds
+      }
+    }
+  });
+  const teachers = await Teacher.model.findAll({
+    where: {
+      UserUuid: {
+        [Op.in]: teacherList instanceof Array ? teacherList : [teacherList]
+      }
+    }
+  });
+  return theCourses.map(item => item.addTeachers(teachers));
 };
 
 exports.getAll = async subjectId => {
   const subject = await Subject.model.findOne({
     id: subjectId
   });
-  console.log(subject);
+  // console.log(subject);
   return subject.getCourses();
+};
+
+exports.getAllForTeacher = async (subjectId, teacherId) => {
+  const subject = await Subject.model.findOne({
+    id: subjectId
+  });
+  const theTeacher = await Teacher.model.findOne({
+    where: {
+      UserUuid: teacherId
+    }
+  });
+  const teacherOwns = (await theTeacher.getCourses()).map(
+    item => item.dataValues.GrantCourse.CourseId
+  );
+  return subject.getCourses({
+    where: {
+      id: {
+        [Sequelize.Op.in]: teacherOwns
+      }
+    }
+  });
 };
 
 exports.getExams = async courseId => {

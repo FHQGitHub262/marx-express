@@ -1,5 +1,5 @@
 const link = require("./db");
-
+const Sequelize = require("sequelize");
 const model = {
   User: require("./models/User"),
   Student: require("./models/Student"),
@@ -61,21 +61,35 @@ model.Student.model.belongsToMany(model.Course.model, {
 model.Course.model.belongsToMany(model.Teacher.model, {
   through: "GrantCourse"
 });
-// model.Teacher.model.belongsToMany(model.Course.model, {
-//   through: "GrantCourse"
-// });
+model.Teacher.model.belongsToMany(model.Course.model, {
+  through: "GrantCourse"
+});
 
 /* 考试线 */
 // 一次考试会组织多个教学班
 model.Exam.model.belongsToMany(model.Course.model, { through: "ExamPlan" });
 model.Course.model.belongsToMany(model.Exam.model, { through: "ExamPlan" });
 // 学生参加考试的记录
-model.Exam.model.belongsToMany(model.Student.model, { through: "StudentExam" });
-model.Student.model.belongsToMany(model.Exam.model, { through: "StudentExam" });
+const Record = link.define("AnswerExam", {
+  raw: Sequelize.TEXT,
+  grade: Sequelize.INTEGER,
+  status: Sequelize.STRING
+});
+model.Exam.model.belongsToMany(model.Student.model, {
+  through: Record
+  // otherKey: "user"
+});
+model.Student.model.belongsToMany(model.Exam.model, {
+  through: Record
+  // foreignKey: "UserUuid"
+  // other: "UserUuid"
+  // foreignKey: "examId",
+  // otherKey: "exam"
+});
 // 一次考试对应一个试卷
 model.Exam.model.belongsTo(model.Paper.model);
 // 学生作答与试卷相关，与试卷无关
-model.Paper.model.belongsToMany(model.Student.model, { through: "AnswerExam" });
+// model.Paper.model.belongsToMany(model.Student.model, { through: Record });
 // 一份试卷由多个题目组成
 model.Question.model.belongsToMany(model.Paper.model, {
   through: "PaperMakeUp"
