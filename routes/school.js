@@ -27,7 +27,6 @@ router.post("/createCollege", async (req, res) => {
 
 router.get("/majors", async (req, res) => {
   const data = await Major.getAll(req.query.id);
-  console.log(data);
   res.json({
     success: true,
     data: data.map(major => major.dataValues)
@@ -35,7 +34,6 @@ router.get("/majors", async (req, res) => {
 });
 
 router.post("/createMajor", async (req, res) => {
-  console.log(req.body);
   const query = await Major.createMajor(req.body.name, req.body.college);
   // console.log(query);
   res.json({

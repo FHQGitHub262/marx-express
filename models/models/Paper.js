@@ -4,7 +4,8 @@ const Sequelize = require("sequelize");
 const Util = require(path.resolve(__dirname, "../util"));
 
 const Question = require("./Question");
-
+const Teacher = require("./Teacher");
+const Subject = require("./Subject");
 const Op = Sequelize.Op;
 
 class Paper extends Sequelize.Model {}
@@ -52,13 +53,61 @@ exports.createPaper = async countConfig => {
       }
     }
   });
-  console.log(thePaper);
-  await thePaper.setQuestions(theQuestions);
+  const theSubject = await Subject.model.findOne({
+    where: {
+      id: countConfig.chapter
+    }
+  });
+  thePaper.addSubject(theSubject);
+  await thePaper.addQuestions(theQuestions);
   return thePaper;
 };
 
-exports.getAll = async () => {
-  return await Paper.findAll();
+exports.getAll = async usage => {
+  const query =
+    usage !== undefined
+      ? {
+          where: { type: usage === "true" ? 1 : 0 }
+        }
+      : {};
+  return await Paper.findAll(query);
+};
+
+exports.getAllForTeacher = async (teacherId, usage) => {
+  const query = usage !== undefined ? { type: usage === "true" ? 1 : 0 } : {};
+  const theTeacher = await Teacher.model.findOne({
+    where: {
+      UserUuid: teacherId
+    }
+  });
+  const grantedCourse = await theTeacher.getCourses();
+  const theSubject = await Subject.model.findAll({
+    where: {
+      id: {
+        [Sequelize.Op.in]: Array.from(
+          new Set(grantedCourse.map(item => item.dataValues.SubjectId))
+        )
+      },
+      ...query
+    }
+  });
+  const hash = [];
+  const thePapers = (
+    await Promise.all(theSubject.map(subject => subject.getPapers()))
+  )
+    .reduce((prev, current) => {
+      return [...prev, ...current];
+    }, [])
+    .reduce((prev, current) => {
+      if (hash.indexOf(current.id) < 0) {
+        return [...prev, current];
+      } else {
+        return prev;
+      }
+    }, []);
+
+  console.log(thePapers);
+  return thePapers;
 };
 
 exports.addQuestions = async (paperId, config) => {
@@ -85,6 +134,66 @@ exports.addQuestions = async (paperId, config) => {
       currentPaper.dataValues[typeKey] + questionToAdd.length;
     await currentPaper.update(updateValue);
   }
+};
+exports.getDetail = async id => {
+  const thePaper = await Paper.findOne({
+    where: { id }
+  });
+  const [questions, subject] = await Promise.all([
+    thePaper.getQuestions(),
+    thePaper.getSubjects()
+  ]);
+
+  return {
+    questions: Util.arrayGroupBy(
+      questions.map(item => ({
+        id: item.dataValues.id,
+        type: item.dataValues.type
+      })),
+      element => element.type
+    ),
+    subject: subject[0].dataValues.id
+  };
+};
+
+exports.updatePaper = async config => {
+  const id = config.id;
+  const thePaper = await Paper.findOne({
+    where: { id }
+  });
+
+  const data = await thePaper.update({
+    name: config.name,
+    type: config.forExam,
+    totalSingle: config.singleNum,
+    totalMulti: config.multiNum,
+    totalTrueFalse: config.truefalseNum,
+    currentSingle: config.singleList.length,
+    currentMulti: config.multiList.length,
+    currentTrueFalse: config.truefalseList.length
+  });
+  console.log("[Data]", data);
+  const theQuestions = await Question.model.findAll({
+    where: {
+      id: {
+        [Sequelize.Op.in]: [
+          ...config.singleList,
+          ...config.multiList,
+          ...config.truefalseList
+        ]
+      }
+    }
+  });
+  const theSubject = await Subject.model.findOne({
+    where: {
+      id: config.chapter
+    }
+  });
+  await Promise.all([
+    thePaper.setSubject([theSubject]),
+    await thePaper.setQuestion([theQuestions])
+  ]);
+  return thePaper;
 };
 
 exports.model = Paper;

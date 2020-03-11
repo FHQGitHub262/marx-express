@@ -9,6 +9,8 @@ db.sync();
 const cors = require("cors");
 const logger = require("morgan");
 const session = require("express-session");
+const RedisStore = require("connect-redis")(session);
+const cache = require("./models/cache").client;
 
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/user");
@@ -19,9 +21,13 @@ const clientRouter = require("./routes/client");
 
 const app = express();
 app.use(cors(require("./config").cors));
-app.set("trust proxy", 1); // trust first proxy
+app.set("trust proxy", 2); // trust first proxy
 app.use(
   session({
+    store: new RedisStore({
+      client: cache,
+      prefix: "session"
+    }),
     secret: "keyboard cat",
     resave: false,
     saveUninitialized: true,
@@ -81,7 +87,7 @@ app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
-
+  console.log(err);
   // render the error page
   res.status(err.status || 500);
   // res.render("error");

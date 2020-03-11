@@ -293,6 +293,10 @@ const init = async () => {
   //   "af345990-5d4d-11ea-b561-0b01b59f44b1",
   //   "126063c0-5a28-11ea-8880-b960ec039600"
   // ).then(res => console.log(res));
+  // Exam.judge("af345990-5d4d-11ea-b561-0b01b59f44b1");
+  Exam.galance("af345990-5d4d-11ea-b561-0b01b59f44b1").then(res => {
+    console.log(res);
+  });
 };
 
 init();

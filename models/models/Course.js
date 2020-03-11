@@ -40,6 +40,19 @@ exports.create = async (name, subjectId) => {
   return course;
 };
 
+exports.detail = async id => {
+  const theCourse = await Course.findOne({ where: { id } });
+  const [teacher, students] = await Promise.all([
+    theCourse.getTeachers(),
+    theCourse.getStudents()
+  ]);
+
+  return {
+    teacher: teacher.map(item => item.dataValues.UserUuid),
+    students: students.map(item => item.dataValues.UserUuid)
+  };
+};
+
 exports.addStudents = async (courseId, studentList) => {
   const theCourse = await Course.findOne({
     where: {
@@ -126,6 +139,30 @@ exports.getExams = async courseId => {
     }
   });
   return await theCourse.getExams();
+};
+
+exports.setStatus = (range, newStatus) => {
+  let query;
+  if (range instanceof Array) {
+    query = {
+      where: {
+        id: { [Sequelize.Op.in]: range }
+      }
+    };
+  } else {
+    query = {
+      where: {
+        id: range
+      }
+    };
+  }
+  console.log(query);
+  return Course.update(
+    {
+      status: newStatus
+    },
+    query
+  );
 };
 
 exports.model = Course;

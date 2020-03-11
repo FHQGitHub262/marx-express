@@ -1,6 +1,8 @@
 var express = require("express");
 var router = express.Router();
 
+const Sequelize = require("sequelize");
+
 const Teacher = require("../models/models/Teacher");
 const Subject = require("../models/models/Subject");
 const Course = require("../models/models/Course");
@@ -46,12 +48,21 @@ router.post("/createTeacher", async (req, res) => {
 
 router.get("/subjects", async (req, res) => {
   try {
-    let query = await Subject.getAll();
+    if (req.session.user.privilege.indexOf("admin") < 0) {
+      res.json({
+        success: true,
+        data: (await Subject.getAllForTeacher(req.session.user.uuid)).map(
+          item => item.dataValues
+        )
+      });
+    } else {
+      let query = await Subject.getAll();
 
-    res.json({
-      success: true,
-      data: query.map(subject => subject.dataValues)
-    });
+      res.json({
+        success: true,
+        data: query.map(subject => subject.dataValues)
+      });
+    }
   } catch (error) {
     console.log(error);
     res.json({ success: false });
@@ -74,7 +85,6 @@ router.get("/students", async (req, res) => {
       id: req.query.id
     }
   });
-  console.log(course);
 
   res.json({
     success: true,
@@ -96,12 +106,54 @@ router.get("/courses", async (req, res) => {
   });
 });
 
+router.get("/course/detail", async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: await Course.detail(req.query.id)
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false
+    });
+  }
+});
+
+router.post("/course/fire", async (req, res) => {
+  try {
+    await Course.setStatus(req.body.range, "active");
+    res.json({
+      success: true
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false
+    });
+  }
+});
+
+router.post("/course/end", async (req, res) => {
+  try {
+    await Course.setStatus(req.body.range, "end");
+    res.json({
+      success: true
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false
+    });
+  }
+});
+
 router.post("/createCourse", async (req, res) => {
   // #TODO: 加入学生选择
-  console.log("here", req.body);
+
   // 创建课程本身
   const course = await Course.create(req.body.name, req.body.subject);
-  console.log(course);
+
   // 加入学生
   const query = await Course.addStudents(
     course.dataValues.id,
@@ -111,11 +163,43 @@ router.post("/createCourse", async (req, res) => {
   const grantTeacher = await Course.grantTo(course.dataValues.id, [
     req.body.teacher
   ]);
-  console.log(query);
+
   res.json({
     success: true,
     data: query.dataValues
   });
+});
+
+router.post("/updateCourse", async (req, res) => {
+  try {
+    // 修改课程本身
+    const course = await Course.model.findOne({
+      where: { id: req.body.id }
+    });
+    course.update({
+      name: req.body.name
+    });
+
+    const [students = [], teachers = []] = await Promise.all([
+      Student.model.findOne({
+        where: { UserUuid: { [Sequelize.Op.in]: req.body.studentList } }
+      }),
+      Teacher.model.findAll({
+        where: { UserUuid: { [Sequelize.Op.in]: [req.body.teacher] } }
+      })
+    ]);
+    await course.addStudents(students);
+    await course.addTeachers(teachers);
+
+    res.json({
+      success: true
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false
+    });
+  }
 });
 
 router.post("/grantCourse", async (req, res) => {
@@ -133,7 +217,6 @@ router.post("/grantCourse", async (req, res) => {
 });
 
 router.get("/chapters", async (req, res) => {
-  console.log(req.query, req.session);
   const query = await Chapter.getAll(req.query.id);
   res.json({
     success: true,
@@ -142,9 +225,8 @@ router.get("/chapters", async (req, res) => {
 });
 
 router.post("/createChapter", async (req, res) => {
-  console.log(req.body);
   const query = await Chapter.create(req.body.name, req.body.subject);
-  console.log(query);
+
   res.json({
     success: true,
     data: query.dataValues
@@ -154,26 +236,102 @@ router.post("/createChapter", async (req, res) => {
 router.get("/questions", async (req, res) => {
   res.json({
     success: true,
-    data: await Question.getAll(req.query.id, req.query.type || undefined)
+    data: await Question.getAll(
+      req.query.id,
+      req.query.type || undefined,
+      req.query.forceEnabled
+    )
   });
 });
 
+router.post("/question/enable", async (req, res) => {
+  try {
+    await Question.setEnable(req.body.range);
+    res.json({
+      success: true
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false
+    });
+  }
+});
+
+router.post("/question/disable", async (req, res) => {
+  try {
+    await Question.setDisable(req.body.range);
+    res.json({
+      success: true
+    });
+  } catch (error) {
+    console.log("error", error);
+    res.json({
+      success: false
+    });
+  }
+});
+
 router.get("/exams", async (req, res) => {
-  res.json({
-    success: true,
-    data: (await Exam.getAll()).map(res => res.dataValues)
-    //   statistics: {
-    //     average: 78,
-    //     max: 99
-    //   }
-    // }
-  });
+  try {
+    if (req.session.user.privilege.indexOf("admin") > 0) {
+      res.json({
+        success: true,
+        data: (await Exam.getAll()).map(res => res.dataValues)
+      });
+    } else {
+      res.json({
+        success: true,
+        data: (await Exam.getAllForTeacher(req.session.user.uuid)).map(
+          res => res.dataValues
+        )
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false
+    });
+  }
+});
+
+router.get("/exam/galance", async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: await Exam.galance(req.query.id)
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false
+    });
+  }
+});
+
+router.get("/exam/detail", async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: await Exam.detail(req.query.id)
+    });
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
 });
 
 router.post("/createExam", async (req, res) => {
   res.json({
     success: true,
     data: await Exam.create(req.body)
+  });
+});
+
+router.post("/updateExam", async (req, res) => {
+  res.json({
+    success: true,
+    data: await Exam.update(req.body)
   });
 });
 

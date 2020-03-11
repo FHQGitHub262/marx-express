@@ -97,6 +97,12 @@ model.Question.model.belongsToMany(model.Paper.model, {
 model.Paper.model.belongsToMany(model.Question.model, {
   through: "PaperMakeUp"
 });
+model.Paper.model.belongsToMany(model.Subject.model, {
+  through: "PaperBelongs"
+});
+model.Subject.model.belongsToMany(model.Paper.model, {
+  through: "PaperBelongs"
+});
 
 // link.sync();
 

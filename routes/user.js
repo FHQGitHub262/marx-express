@@ -10,12 +10,19 @@ router.get("/", function(req, res, next) {
 
 // #DONE
 router.post("/info", (req, res) => {
-  console.log(req.session.user);
-  res.json({
-    success:
-      Boolean(req.session.user) && Object.keys(req.session.user).length !== 0,
-    data: req.session.user || {}
-  });
+  try {
+    console.log(req.session.user);
+    res.json({
+      success:
+        Boolean(req.session.user) && Object.keys(req.session.user).length !== 0,
+      data: req.session.user || {}
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false
+    });
+  }
 });
 
 router.post("/logout", async (req, res) => {

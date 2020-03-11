@@ -69,9 +69,33 @@ exports.create = async (
   return question;
 };
 
+exports.setEnable = async range => {
+  console.log(range);
+  return await Question.update(
+    {
+      enable: true
+    },
+    {
+      where: { id: { [Sequelize.Op.in]: range } }
+    }
+  );
+};
+
+exports.setDisable = async range => {
+  console.log(range);
+  return await Question.update(
+    {
+      enable: false
+    },
+    {
+      where: { id: { [Sequelize.Op.in]: range } }
+    }
+  );
+};
+
 exports.update = (id, newValue) => {
   return Question.findOne({
-    id
+    where: { id }
   }).update(newValue);
 };
 
@@ -80,7 +104,7 @@ exports.detail = async id => {
   return target.dataValues;
 };
 
-exports.getAll = async (chapterId, type) => {
+exports.getAll = async (chapterId, type, forceEnable = false) => {
   const chapter = await Chapter.model.findOne({
     where: { id: chapterId }
     // attributes: ["id", "title", "type", "usage"]
@@ -89,6 +113,11 @@ exports.getAll = async (chapterId, type) => {
   let search = {};
   if (type) {
     search.type = type;
+  }
+  console.log(forceEnable);
+  if (forceEnable) {
+    console.log("here");
+    search.enable = true;
   }
   return chapter.getQuestions({ where: search });
 };

@@ -93,7 +93,7 @@ exports.hashSet = hashSet;
 exports.set = set;
 exports.get = get;
 exports.client = client;
-exports.hashDel = hashGet;
+exports.hashDel = hashDel;
 
 // this.hashSet("exam", {
 //   st2: "123456"
