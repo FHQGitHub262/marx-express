@@ -3,6 +3,8 @@ var redis = require("redis");
 const config = require("../config").redis;
 let eventTable = {};
 
+let testKey;
+
 // 创建一个用于订阅通知的client
 const subscriberClient = redis.createClient(config);
 subscriberClient.psubscribe("__keyevent@0__:expired");
@@ -10,7 +12,7 @@ subscriberClient.psubscribe("__keyevent@0__:expired");
 // 创建一个用于存放调度的队列的client
 const schedQueueClient = redis.createClient(config);
 subscriberClient.on("pmessage", function(pattern, channel, expiredKey) {
-  console.log("pmessage");
+  console.log("pmessage", expiredKey);
   const { event, data } = JSON.parse(expiredKey);
   emit(event, data);
   //TODO: push expiredKey onto some other list to proceed to order fulfillment
@@ -40,6 +42,11 @@ exports.scheduleToDo = (emitEvent, emitTime, emitData = "") => {
   }
   // 未来
   if (now < schedule) {
+    testKey = JSON.stringify({
+      event: emitEvent,
+      data: emitData,
+      time: schedule
+    });
     schedQueueClient.set(
       JSON.stringify({ event: emitEvent, data: emitData, time: schedule }),
       "",
@@ -52,6 +59,25 @@ exports.scheduleToDo = (emitEvent, emitTime, emitData = "") => {
   }
   // 过去, 直接执行
   else emit(emitEvent, emitData);
+};
+
+exports.cancelToDo = (emitEvent, emitTime, emitData = "") => {
+  const now = new Date().getTime();
+  let schedule;
+
+  if (typeof emitTime === "number") {
+    schedule = emitTime;
+  } else if (emitTime instanceof Date) {
+    schedule = emitTime.getTime();
+  } else {
+    return;
+  }
+  // 未来
+  if (now < schedule) {
+    schedQueueClient.del(
+      JSON.stringify({ event: emitEvent, data: emitData, time: schedule })
+    );
+  }
 };
 
 const emit = (eventName, data) => {
@@ -67,4 +93,8 @@ const log = (...args) => {
 // this.addEventListener("test", data => {
 //   console.log("test");
 // });
-// this.scheduleToDo("test", new Date().getTime() + 5000);
+// const scheduleTime = new Date().getTime() + 10000;
+// this.scheduleToDo("test", scheduleTime);
+// setTimeout(() => {
+//   this.cancelToDo("test", scheduleTime);
+// }, 1000);

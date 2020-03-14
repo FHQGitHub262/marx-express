@@ -9,6 +9,7 @@ var config = {
   redis: { host: "129.204.218.96", port: "6379", password: "mypassword" },
   cors: {
     credentials: true,
+    exposedHeaders: ["Content-Disposition"],
     origin: [
       // "http://192.168.0.103:3000",
       "localhost:8080",

@@ -330,6 +330,26 @@ exports.galance = async examId => {
   };
 };
 
+exports.output = async examId => {
+  var xlsx = require("node-xlsx").default;
+
+  const data = [["学号", "姓名", "分数"]];
+
+  const theExam = await Exam.findOne({ where: { id: examId } });
+
+  const record = (await theExam.getStudents()).map(item => [
+    // id: item.dataValues.UserUuid,
+    item.dataValues.idNumber,
+    item.dataValues.name,
+    item.dataValues.AnswerExam.grade
+  ]);
+
+  return {
+    name: theExam.dataValues.name,
+    buf: xlsx.build([{ name: "考试详情", data: [...data, ...record] }])
+  }; // Returns a buffer
+};
+
 exports.update = async config => {
   const theExam = await Exam.findOne({
     where: { id: config.id }
@@ -381,7 +401,21 @@ exports.update = async config => {
     exam.setCourses(courses)
   ]);
 
-  // TODO 取消定时任务
+  // 取消定时任务
+  Task.cancelToDo(
+    "prepare_exam",
+    new Date(prevStart).getTime() - 24 * 60 * 60 * 1000,
+    JSON.stringify({
+      id: exam.dataValues.id
+    })
+  );
+  Task.scheduleToDo(
+    "cleanup_exam",
+    new Date(prevEnd).getTime() + 60 * 1000 * 60,
+    JSON.stringify({
+      id: exam.dataValues.id
+    })
+  );
 
   // 创建定时任务，考试前一天prepare考试
   Task.scheduleToDo(

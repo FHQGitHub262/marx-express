@@ -43,7 +43,7 @@ const init = async () => {
   // Teacher.getAll()
 
   // 创建学生
-  // Student.createStudent("123456", "17041802", "测试学生").then(res =>
+  // Student.createStudent("123456", "17041801", "测试学生").then(res =>
   //   console.log(res)
   // );
   // Student.createStudent("123456", "17041802", "Test 2").then(res =>
@@ -294,8 +294,11 @@ const init = async () => {
   //   "126063c0-5a28-11ea-8880-b960ec039600"
   // ).then(res => console.log(res));
   // Exam.judge("af345990-5d4d-11ea-b561-0b01b59f44b1");
-  Exam.galance("af345990-5d4d-11ea-b561-0b01b59f44b1").then(res => {
-    console.log(res);
+  // Exam.galance("af345990-5d4d-11ea-b561-0b01b59f44b1").then(res => {
+  //   console.log(res);
+  // });
+  Exam.output("af345990-5d4d-11ea-b561-0b01b59f44b1").then(res => {
+    require("fs").writeFileSync("./test.xlsx", res);
   });
 };
 

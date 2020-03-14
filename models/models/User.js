@@ -42,6 +42,7 @@ exports.login = async (idnumber, passwd) => {
   if (res && res.dataValues.passwd === passwd) {
     return [true, res.dataValues];
   } else {
+    console.log(res.dataValues);
     return [false, {}];
   }
 };

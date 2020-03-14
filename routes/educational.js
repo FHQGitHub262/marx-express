@@ -1,5 +1,6 @@
 var express = require("express");
 var router = express.Router();
+var contentDisposition = require("content-disposition");
 
 const Sequelize = require("sequelize");
 
@@ -306,6 +307,21 @@ router.get("/exam/galance", async (req, res) => {
     res.json({
       success: false
     });
+  }
+});
+
+router.get("/exam/export", async (req, res) => {
+  try {
+    const { buf, name } = await Exam.output(req.query.id);
+    res
+      .set(
+        "Content-Disposition",
+        "attachment;filename=" +
+          require("urlencode")(`${name || "考试详情"}.xlsx`, "utf-8")
+      )
+      .send(buf);
+  } catch (error) {
+    res.status("500").end();
   }
 });
 
