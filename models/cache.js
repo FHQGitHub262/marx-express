@@ -88,6 +88,11 @@ const hashDel = keyName => {
   });
 };
 
+// 心跳
+setInterval(() => {
+  client.set("cacheTick", new Date().toLocaleString());
+}, 1000 * 30);
+
 exports.hashGet = hashGet;
 exports.hashSet = hashSet;
 exports.set = set;

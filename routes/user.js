@@ -12,9 +12,11 @@ router.get("/", function(req, res, next) {
 router.post("/info", (req, res) => {
   try {
     console.log(req.session.user);
+    const success =
+      Boolean(req.session.user) && Object.keys(req.session.user).length !== 0;
+
     res.json({
-      success:
-        Boolean(req.session.user) && Object.keys(req.session.user).length !== 0,
+      success,
       data: req.session.user || {}
     });
   } catch (error) {

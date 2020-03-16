@@ -297,8 +297,14 @@ const init = async () => {
   // Exam.galance("af345990-5d4d-11ea-b561-0b01b59f44b1").then(res => {
   //   console.log(res);
   // });
-  Exam.output("af345990-5d4d-11ea-b561-0b01b59f44b1").then(res => {
-    require("fs").writeFileSync("./test.xlsx", res);
+  // Exam.output("af345990-5d4d-11ea-b561-0b01b59f44b1").then(res => {
+  //   require("fs").writeFileSync("./test.xlsx", res);
+  // });
+  Question.import(
+    "1584265881033-mock题库.xlsx",
+    "85184260-5a29-11ea-8b90-85dea84c548a"
+  ).then(res => {
+    console.log(res);
   });
 };
 

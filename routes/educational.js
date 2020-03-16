@@ -273,6 +273,19 @@ router.post("/question/disable", async (req, res) => {
   }
 });
 
+router.post("/questions/import", async (req, res) => {
+  try {
+    await Question.import(req.body.filename, req.body.chapter);
+    res.json({
+      success: true
+    });
+  } catch (error) {
+    res.json({
+      success: false
+    });
+  }
+});
+
 router.get("/exams", async (req, res) => {
   try {
     if (req.session.user.privilege.indexOf("admin") > 0) {
@@ -293,6 +306,24 @@ router.get("/exams", async (req, res) => {
     res.json({
       success: false
     });
+  }
+});
+
+router.post("/exam/prepare", async (req, res) => {
+  try {
+    await Exam.prepare(req.body.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.json({ success: false });
+  }
+});
+
+router.post("/exam/judge", async (req, res) => {
+  try {
+    await Exam.judge(req.body.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.json({ success: false });
   }
 });
 

@@ -1,16 +1,16 @@
-var redis = require("redis");
+var redis = require("ioredis");
 
-const config = require("../config").redis;
+const config = require("../config");
 let eventTable = {};
 
 let testKey;
 
 // 创建一个用于订阅通知的client
-const subscriberClient = redis.createClient(config);
+const subscriberClient = redis.createClient(config.redis);
 subscriberClient.psubscribe("__keyevent@0__:expired");
 
 // 创建一个用于存放调度的队列的client
-const schedQueueClient = redis.createClient(config);
+const schedQueueClient = redis.createClient(config.redis);
 subscriberClient.on("pmessage", function(pattern, channel, expiredKey) {
   console.log("pmessage", expiredKey);
   const { event, data } = JSON.parse(expiredKey);
@@ -81,6 +81,7 @@ exports.cancelToDo = (emitEvent, emitTime, emitData = "") => {
 };
 
 const emit = (eventName, data) => {
+  console.log("[Schedule]", "Emit Event", eventName, "with", data);
   const handlers = eventTable[eventName] || [];
   if (handlers.length === 0) log("Unknow event", `"${eventName}"`);
   handlers.forEach(foo => foo(data));
@@ -89,6 +90,15 @@ const emit = (eventName, data) => {
 const log = (...args) => {
   console.log.apply({}, ["[Schedule]", new Date(), ...args]);
 };
+
+// 心跳
+setInterval(() => {
+  schedQueueClient.set("schedQueueTick", new Date().toLocaleString());
+}, 1000 * config.redisTick);
+
+subscriberClient.on("error", err => {
+  console.log("[Schedule]", err);
+});
 
 // this.addEventListener("test", data => {
 //   console.log("test");

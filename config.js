@@ -19,7 +19,8 @@ var config = {
       /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:4000/,
       /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:8080/
     ]
-  }
+  },
+  redisTick: 10
 };
 
 module.exports = config;

@@ -4,6 +4,7 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 
 const models = require("./models/index");
+const tasks = require("./schedule/tasks");
 const db = require("./models/db");
 db.sync();
 const cors = require("cors");

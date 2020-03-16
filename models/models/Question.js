@@ -4,6 +4,7 @@ const Sequelize = require("sequelize");
 const Util = require(path.resolve(__dirname, "../util"));
 
 const Chapter = require("./Chapter");
+const xlsx = require("node-xlsx").default;
 
 class Question extends Sequelize.Model {}
 Question.init(
@@ -146,6 +147,50 @@ exports.enable = questionLists => {
       }
     }
   );
+};
+
+exports.import = async (fileName, chaperId) => {
+  const file = xlsx.parse(path.resolve(__dirname, "../../uploads", fileName));
+  const raw = file.reduce((prev, current) => {
+    return [
+      ...prev,
+      ...(current.data || []).flatMap((item, index) => {
+        item[5] = String(item[5]);
+        if (index === 0) return [];
+        return {
+          title: item[0],
+          right: JSON.stringify(
+            item[5] === "true" || item[5] === "false"
+              ? [item[5]]
+              : String(item[5]).split("")
+          ),
+          type:
+            item[5] === "true" || item[5] === "false"
+              ? "trueFalse"
+              : item[5].split("").length === 1
+              ? "single"
+              : "multi",
+          detail: JSON.stringify(
+            ["A", "B", "C", "D"].reduce((prev, choice, i) => {
+              return {
+                ...prev,
+                [choice]: item[i + 1]
+              };
+            }, {})
+          ),
+          usage: Math.random() > 0.5,
+          enable: true,
+          id: Util.uuid()
+        };
+      })
+    ];
+  }, []);
+  console.log(raw);
+  const questions = await Question.bulkCreate(raw);
+  const targetChapter = await Chapter.model.findOne({
+    where: { id: chaperId }
+  });
+  await targetChapter.addQuestions(questions);
 };
 
 exports.model = Question;
