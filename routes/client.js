@@ -11,11 +11,14 @@ const Sequelize = require("sequelize");
 
 router.get("/courses", async (req, res) => {
   console.log(req.session);
-
-  res.json({
-    success: true,
-    data: await Student.getCourse(req.session.user.uuid)
-  });
+  try {
+    res.json({
+      success: true,
+      data: await Student.getCourse(req.session.user.uuid)
+    });
+  } catch (error) {
+    res.json({ success: false });
+  }
 });
 
 router.get("/exams", async (req, res) => {

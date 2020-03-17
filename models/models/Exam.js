@@ -82,6 +82,15 @@ exports.create = async config => {
     })
   );
 
+  // 创建定时任务，考试结束后1min，judge考试
+  Task.scheduleToDo(
+    "judge_exam",
+    new Date(config.endAt).getTime() - 60 * 1000,
+    JSON.stringify({
+      id: exam.dataValues.id
+    })
+  );
+
   // 创建定时任务，考试结束后1h，删除redis里相关内容
   Task.scheduleToDo(
     "cleanup_exam",
@@ -409,6 +418,16 @@ exports.update = async config => {
       id: exam.dataValues.id
     })
   );
+
+  // 创建定时任务，考试结束后1min，judge考试
+  Task.cancelToDo(
+    "judge_exam",
+    new Date(prevEnd).getTime() - 60 * 1000,
+    JSON.stringify({
+      id: exam.dataValues.id
+    })
+  );
+
   Task.scheduleToDo(
     "cleanup_exam",
     new Date(prevEnd).getTime() + 60 * 1000 * 60,
@@ -421,6 +440,15 @@ exports.update = async config => {
   Task.scheduleToDo(
     "prepare_exam",
     new Date(config.startAt).getTime() - 24 * 60 * 60 * 1000,
+    JSON.stringify({
+      id: exam.dataValues.id
+    })
+  );
+
+  // 创建定时任务，考试结束后1min，judge考试
+  Task.scheduleToDo(
+    "judge_exam",
+    new Date(config.endAt).getTime() - 60 * 1000,
     JSON.stringify({
       id: exam.dataValues.id
     })

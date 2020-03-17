@@ -1,6 +1,6 @@
 const Sequelize = require("sequelize");
 const { dialect, database, username, password, host } = require("../config");
-console.log("Init sequelize...");
+console.log("[ORM]", "Init sequelize...");
 
 const sequelize = new Sequelize(
   `${dialect}://${username}:${password}@${host}/${database}`,
