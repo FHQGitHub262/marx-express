@@ -154,12 +154,15 @@ exports.enable = (questionLists) => {
 exports.import = async (fileName, subjectId) => {
   const file = xlsx.parse(path.resolve(__dirname, "../../uploads", fileName));
   const belongsTable = {};
+  console.log(file);
   const raw = file.reduce((prev, current) => {
     return [
       ...prev,
       ...(current.data || []).flatMap((item, index) => {
-        item[5] = String(item[5]);
+        if (item.length === 0) return [];
+
         if (index === 0) return [];
+        item[5] = String(item[5]);
         const id = Util.hashString(item[2]);
         if (!belongsTable[item[0]]) belongsTable[item[0]] = [];
         belongsTable[item[0]].push(id);
