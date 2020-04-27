@@ -156,6 +156,7 @@ exports.import = async (fileName, subjectId) => {
   const belongsTable = {};
   console.log(file);
   const raw = file.reduce((prev, current) => {
+    console.log(current.data);
     return [
       ...prev,
       ...(current.data || []).flatMap((item, index) => {
