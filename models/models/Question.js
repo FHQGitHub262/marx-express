@@ -197,7 +197,7 @@ exports.import = async (fileName, subjectId) => {
     return [...prev, ...data];
   }, []);
   await Question.bulkCreate(raw, {
-    updateOnDuplicate: ["id"],
+    updateOnDuplicate: ["title", "right", "detail"],
   });
   const targetSubject = await Subject.model.findOne({
     where: { id: subjectId },
