@@ -156,42 +156,50 @@ exports.import = async (fileName, subjectId) => {
   const belongsTable = {};
 
   const raw = file.reduce((prev, current) => {
-    const data = (current.data || []).flatMap((item, index) => {
-      if (item.length === 0) return [];
+    const data = (current.data || [])
+      .map((item, index) => {
+        if (item.length === 0) return [];
 
-      if (index === 0) return [];
-      item[5] = String(item[5]);
-      const id = Util.hashString(item[2]);
-      if (!belongsTable[item[0]]) belongsTable[item[0]] = [];
-      belongsTable[item[0]].push(id);
+        if (index === 0) return [];
+        item[5] = String(item[5]);
+        const id = Util.hashString(item[2]);
+        if (!belongsTable[item[0]]) belongsTable[item[0]] = [];
+        belongsTable[item[0]].push(id);
 
-      return {
-        title: item[2],
-        right: JSON.stringify(
-          String(item[6]) === "2"
-            ? [item[3] === "A" ? "FALSE" : "TRUE"]
-            : String(item[3]).split("")
-        ),
-        type:
-          String(item[6]) === "2"
-            ? "trueFalse"
-            : item[3].split("").length === 1
-            ? "single"
-            : "multi",
-        detail: JSON.stringify(
-          ["A", "B", "C", "D"].reduce((prev, choice, i) => {
-            return {
-              ...prev,
-              [choice]: String(item[i + 7]).trim(),
-            };
-          }, {})
-        ),
-        usage: Math.random() > 0.5,
-        enable: true,
-        id,
-        difficult: item[5],
-      };
-    });
+        return {
+          title: item[2],
+          right: JSON.stringify(
+            String(item[6]) === "2"
+              ? [item[3] === "A" ? "FALSE" : "TRUE"]
+              : String(item[3]).split("")
+          ),
+          type:
+            String(item[6]) === "2"
+              ? "trueFalse"
+              : item[3].split("").length === 1
+              ? "single"
+              : "multi",
+          detail: JSON.stringify(
+            ["A", "B", "C", "D"].reduce((prev, choice, i) => {
+              return {
+                ...prev,
+                [choice]: String(item[i + 7]).trim(),
+              };
+            }, {})
+          ),
+          usage: Math.random() > 0.5,
+          enable: true,
+          id,
+          difficult: item[5],
+        };
+      })
+      .reduce((prev, curr) => {
+        if (curr instanceof Array) return prev;
+        else {
+          prev.push(curr);
+          return prev;
+        }
+      }, []);
 
     console.log(data);
     return [...prev, ...data];
