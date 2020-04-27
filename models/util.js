@@ -1,22 +1,32 @@
 const uuidv1 = require("uuid/v4");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
+
 exports.uuid = () => {
   return uuidv1();
 };
 
-exports.checkPrivilege = privilege => {
+exports.hashString = (str) => {
+  const hash = crypto.createHash("md5");
+
+  // 可任意多次调用update():
+  hash.update(str);
+  return String(hash.digest("hex")); // 7e1977739c748beac0c0fd14fd26a544
+};
+
+exports.checkPrivilege = (privilege) => {
   if (!privilege instanceof Array) {
     return false;
   } else {
     const available = ["student", "admin", "teacher"];
-    return !privilege.filter(elem => available.indexOf(elem) < 0).length > 0;
+    return !privilege.filter((elem) => available.indexOf(elem) < 0).length > 0;
   }
 };
 
 exports.arrayGroupBy = function groupBy(array, f) {
   let groups = {};
-  array.forEach(elem => {
+  array.forEach((elem) => {
     const type = String(f(elem));
     if (groups[type] === undefined) [(groups[type] = [])];
     groups[type].push(elem);
@@ -81,7 +91,7 @@ exports.rmdir = rmdir;
  */
 function mkdir(dir) {
   return new Promise((resolve, reject) => {
-    fs.mkdir(dir, err => {
+    fs.mkdir(dir, (err) => {
       if (err) {
         resolve(false);
       } else {

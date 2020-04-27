@@ -4,6 +4,7 @@ const Sequelize = require("sequelize");
 const Util = require(path.resolve(__dirname, "../util"));
 
 const Chapter = require("./Chapter");
+const Subject = require("./Subject");
 const xlsx = require("node-xlsx").default;
 
 class Question extends Sequelize.Model {}
@@ -12,7 +13,7 @@ Question.init(
     id: {
       type: Sequelize.STRING(100),
       primaryKey: true,
-      unique: true
+      unique: true,
     },
     title: Sequelize.STRING(100),
     right: Sequelize.STRING(10),
@@ -20,7 +21,8 @@ Question.init(
     enable: Sequelize.BOOLEAN,
     detail: Sequelize.TEXT,
     // forExam
-    usage: Sequelize.BOOLEAN
+    usage: Sequelize.BOOLEAN,
+    difficult: Sequelize.STRING(20),
   },
   { sequelize, modelName: "Question" }
 );
@@ -31,7 +33,7 @@ exports.create = async (
     right: "",
     type: "trueFalse",
     detail: {},
-    usage: false
+    usage: false,
   },
   chapterId
 ) => {
@@ -41,9 +43,9 @@ exports.create = async (
       right: "",
       type: "trueFalse",
       detail: {},
-      usage: false
+      usage: false,
     },
-    ...config
+    ...config,
   };
   if (typeof config.detail === "object")
     config.detail = JSON.stringify(config.detail);
@@ -52,17 +54,17 @@ exports.create = async (
     Question.create({
       enable: true,
       id: Util.uuid(),
-      ...config
+      ...config,
     }),
     (async () => {
       return (await chapterId)
         ? Chapter.model.findOne({
             where: {
-              id: chapterId
-            }
+              id: chapterId,
+            },
           })
         : undefined;
-    })()
+    })(),
   ]);
   if (chapter) {
     await chapter.addQuestion(question);
@@ -70,44 +72,44 @@ exports.create = async (
   return question;
 };
 
-exports.setEnable = async range => {
+exports.setEnable = async (range) => {
   console.log(range);
   return await Question.update(
     {
-      enable: true
+      enable: true,
     },
     {
-      where: { id: { [Sequelize.Op.in]: range } }
+      where: { id: { [Sequelize.Op.in]: range } },
     }
   );
 };
 
-exports.setDisable = async range => {
+exports.setDisable = async (range) => {
   console.log(range);
   return await Question.update(
     {
-      enable: false
+      enable: false,
     },
     {
-      where: { id: { [Sequelize.Op.in]: range } }
+      where: { id: { [Sequelize.Op.in]: range } },
     }
   );
 };
 
 exports.update = (id, newValue) => {
   return Question.findOne({
-    where: { id }
+    where: { id },
   }).update(newValue);
 };
 
-exports.detail = async id => {
+exports.detail = async (id) => {
   const target = await Question.findOne({ id });
   return target.dataValues;
 };
 
 exports.getAll = async (chapterId, type, forceEnable = false) => {
   const chapter = await Chapter.model.findOne({
-    where: { id: chapterId }
+    where: { id: chapterId },
     // attributes: ["id", "title", "type", "usage"]
   });
 
@@ -123,74 +125,106 @@ exports.getAll = async (chapterId, type, forceEnable = false) => {
   return chapter.getQuestions({ where: search });
 };
 
-exports.disable = questionLists => {
+exports.disable = (questionLists) => {
   return Question.update(
     {
-      enable: false
+      enable: false,
     },
     {
       where: {
-        [Sequelize.Op.in]: questionLists
-      }
+        [Sequelize.Op.in]: questionLists,
+      },
     }
   );
 };
 
-exports.enable = questionLists => {
+exports.enable = (questionLists) => {
   return Question.update(
     {
-      enable: true
+      enable: true,
     },
     {
       where: {
-        [Sequelize.Op.in]: questionLists
-      }
+        [Sequelize.Op.in]: questionLists,
+      },
     }
   );
 };
 
-exports.import = async (fileName, chaperId) => {
+exports.import = async (fileName, subjectId) => {
   const file = xlsx.parse(path.resolve(__dirname, "../../uploads", fileName));
+  const belongsTable = {};
   const raw = file.reduce((prev, current) => {
     return [
       ...prev,
       ...(current.data || []).flatMap((item, index) => {
         item[5] = String(item[5]);
         if (index === 0) return [];
+        const id = Util.hashString(item[2]);
+        if (!belongsTable[item[0]]) belongsTable[item[0]] = [];
+        belongsTable[item[0]].push(id);
+
         return {
-          title: item[0],
+          title: item[2],
           right: JSON.stringify(
-            item[5] === "true" || item[5] === "false"
-              ? [item[5]]
-              : String(item[5]).split("")
+            String(item[6]) === "2"
+              ? [item[3] === "A" ? "FALSE" : "TRUE"]
+              : String(item[3]).split("")
           ),
           type:
-            item[5] === "true" || item[5] === "false"
+            String(item[6]) === "2"
               ? "trueFalse"
-              : item[5].split("").length === 1
+              : item[3].split("").length === 1
               ? "single"
               : "multi",
           detail: JSON.stringify(
             ["A", "B", "C", "D"].reduce((prev, choice, i) => {
               return {
                 ...prev,
-                [choice]: item[i + 1]
+                [choice]: String(item[i + 7]).trim(),
               };
             }, {})
           ),
           usage: Math.random() > 0.5,
           enable: true,
-          id: Util.uuid()
+          id,
+          difficult: item[5],
         };
-      })
+      }),
     ];
   }, []);
-  console.log(raw);
-  const questions = await Question.bulkCreate(raw);
-  const targetChapter = await Chapter.model.findOne({
-    where: { id: chaperId }
+  await Question.bulkCreate(raw, {
+    updateOnDuplicate: ["id"],
   });
-  await targetChapter.addQuestions(questions);
+  const targetSubject = await Subject.model.findOne({
+    where: { id: subjectId },
+  });
+
+  const chapterNames = Object.keys(belongsTable);
+  for (let i = 0; i < chapterNames.length; i++) {
+    const chapterName = chapterNames[i];
+
+    const targetChapter = await targetSubject.getChapters({
+      where: { name: chapterName },
+    });
+    let theChapter;
+    if (targetChapter.length === 0) {
+      theChapter = await Chapter.create(
+        chapterName,
+        targetSubject.dataValues.id
+      );
+    } else {
+      theChapter = targetChapter[0];
+    }
+
+    await theChapter.addQuestions(
+      await Question.findAll({
+        where: { id: { [Sequelize.Op.in]: belongsTable[chapterName] } },
+      })
+    );
+  }
+  return;
+  // await targetChapter.addQuestions(questions);
 };
 
 exports.model = Question;

@@ -10,14 +10,14 @@ const {
   Course,
   Question,
   Paper,
-  Exam
+  Exam,
 } = require("./index");
 const testCollege = "93d5db20-4406-11ea-962f-85630932b4e3";
 const testMajor = "ac87e0a0-4406-11ea-bd9c-ad92072a80c2";
 const testClass = "547bb590-44be-11ea-99ac-dbfc562210a2";
 const testStudent = [
   "7f0dfc80-44d4-11ea-88a5-4f73f98121bc",
-  "7f0f5c10-44d4-11ea-88a5-4f73f98121bc"
+  "7f0f5c10-44d4-11ea-88a5-4f73f98121bc",
 ];
 const testSubject = "63e69c20-44d2-11ea-a97d-39841d8140c6";
 const testCourse = "f84fa9a0-44d3-11ea-b75c-43fdac80c98b";
@@ -300,12 +300,11 @@ const init = async () => {
   // Exam.output("af345990-5d4d-11ea-b561-0b01b59f44b1").then(res => {
   //   require("fs").writeFileSync("./test.xlsx", res);
   // });
-  Question.import(
-    "1584265881033-mock题库.xlsx",
-    "85184260-5a29-11ea-8b90-85dea84c548a"
-  ).then(res => {
-    console.log(res);
-  });
+  Question.import("第一章.xlsx", "85184260-5a29-11ea-8b90-85dea84c548a").then(
+    (res) => {
+      console.log(res.slice(-5));
+    }
+  );
 };
 
 init();

@@ -17,18 +17,18 @@ router.get("/teachers", async (req, res) => {
     if (!req.session.user) throw new Error("未登录");
     const query = await Teacher.getAll();
     // console.log(req.query, req.session);
-    const data = (query || []).map(teacherInfo => {
+    const data = (query || []).map((teacherInfo) => {
       return teacherInfo.dataValues || {};
     });
     res.json({
       success: true,
-      data
+      data,
     });
   } catch (e) {
     console.log(e);
     res.json({
       success: false,
-      data: []
+      data: [],
     });
   }
 });
@@ -43,7 +43,7 @@ router.post("/createTeacher", async (req, res) => {
   // console.log(query);
   res.json({
     success: true,
-    data: query.dataValues
+    data: query.dataValues,
   });
 });
 
@@ -53,15 +53,15 @@ router.get("/subjects", async (req, res) => {
       res.json({
         success: true,
         data: (await Subject.getAllForTeacher(req.session.user.uuid)).map(
-          item => item.dataValues
-        )
+          (item) => item.dataValues
+        ),
       });
     } else {
       let query = await Subject.getAll();
 
       res.json({
         success: true,
-        data: query.map(subject => subject.dataValues)
+        data: query.map((subject) => subject.dataValues),
       });
     }
   } catch (error) {
@@ -76,20 +76,20 @@ router.post("/createSubject", async (req, res) => {
   // console.log(query);
   res.json({
     success: true,
-    data: query.dataValues
+    data: query.dataValues,
   });
 });
 
 router.get("/students", async (req, res) => {
   const course = await Course.model.findOne({
     where: {
-      id: req.query.id
-    }
+      id: req.query.id,
+    },
   });
 
   res.json({
     success: true,
-    data: (await course.getStudents()).map(item => item.dataValues)
+    data: (await course.getStudents()).map((item) => item.dataValues),
   });
 });
 
@@ -103,7 +103,7 @@ router.get("/courses", async (req, res) => {
   }
   res.json({
     success: true,
-    data: course.map(item => item.dataValues)
+    data: course.map((item) => item.dataValues),
   });
 });
 
@@ -111,12 +111,12 @@ router.get("/course/detail", async (req, res) => {
   try {
     res.json({
       success: true,
-      data: await Course.detail(req.query.id)
+      data: await Course.detail(req.query.id),
     });
   } catch (error) {
     console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -125,12 +125,12 @@ router.post("/course/fire", async (req, res) => {
   try {
     await Course.setStatus(req.body.range, "active");
     res.json({
-      success: true
+      success: true,
     });
   } catch (error) {
     console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -139,12 +139,12 @@ router.post("/course/end", async (req, res) => {
   try {
     await Course.setStatus(req.body.range, "end");
     res.json({
-      success: true
+      success: true,
     });
   } catch (error) {
     console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -162,12 +162,12 @@ router.post("/createCourse", async (req, res) => {
   );
   // 加入教师
   const grantTeacher = await Course.grantTo(course.dataValues.id, [
-    req.body.teacher
+    req.body.teacher,
   ]);
 
   res.json({
     success: true,
-    data: query.dataValues
+    data: query.dataValues,
   });
 });
 
@@ -175,30 +175,30 @@ router.post("/updateCourse", async (req, res) => {
   try {
     // 修改课程本身
     const course = await Course.model.findOne({
-      where: { id: req.body.id }
+      where: { id: req.body.id },
     });
     course.update({
-      name: req.body.name
+      name: req.body.name,
     });
 
     const [students = [], teachers = []] = await Promise.all([
       Student.model.findOne({
-        where: { UserUuid: { [Sequelize.Op.in]: req.body.studentList } }
+        where: { UserUuid: { [Sequelize.Op.in]: req.body.studentList } },
       }),
       Teacher.model.findAll({
-        where: { UserUuid: { [Sequelize.Op.in]: [req.body.teacher] } }
-      })
+        where: { UserUuid: { [Sequelize.Op.in]: [req.body.teacher] } },
+      }),
     ]);
     await course.addStudents(students);
     await course.addTeachers(teachers);
 
     res.json({
-      success: true
+      success: true,
     });
   } catch (error) {
     console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -206,13 +206,13 @@ router.post("/updateCourse", async (req, res) => {
 router.post("/grantCourse", async (req, res) => {
   try {
     const grantTeacher = await Course.grantBatchTo(req.body.course, [
-      req.body.teacher
+      req.body.teacher,
     ]);
     res.json({ success: true });
   } catch (error) {
     console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -221,7 +221,7 @@ router.get("/chapters", async (req, res) => {
   const query = await Chapter.getAll(req.query.id);
   res.json({
     success: true,
-    data: query.map(item => item.dataValues)
+    data: query.map((item) => item.dataValues),
   });
 });
 
@@ -230,7 +230,7 @@ router.post("/createChapter", async (req, res) => {
 
   res.json({
     success: true,
-    data: query.dataValues
+    data: query.dataValues,
   });
 });
 
@@ -241,7 +241,7 @@ router.get("/questions", async (req, res) => {
       req.query.id,
       req.query.type || undefined,
       req.query.forceEnabled
-    )
+    ),
   });
 });
 
@@ -249,12 +249,12 @@ router.post("/question/enable", async (req, res) => {
   try {
     await Question.setEnable(req.body.range);
     res.json({
-      success: true
+      success: true,
     });
   } catch (error) {
     console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -263,25 +263,26 @@ router.post("/question/disable", async (req, res) => {
   try {
     await Question.setDisable(req.body.range);
     res.json({
-      success: true
+      success: true,
     });
   } catch (error) {
     console.log("error", error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
 
 router.post("/questions/import", async (req, res) => {
   try {
-    await Question.import(req.body.filename, req.body.chapter);
+    await Question.import(req.body.filename, req.body.subject);
     res.json({
-      success: true
+      success: true,
     });
   } catch (error) {
+    console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -291,20 +292,20 @@ router.get("/exams", async (req, res) => {
     if (req.session.user.privilege.indexOf("admin") > 0) {
       res.json({
         success: true,
-        data: (await Exam.getAll()).map(res => res.dataValues)
+        data: (await Exam.getAll()).map((res) => res.dataValues),
       });
     } else {
       res.json({
         success: true,
         data: (await Exam.getAllForTeacher(req.session.user.uuid)).map(
-          res => res.dataValues
-        )
+          (res) => res.dataValues
+        ),
       });
     }
   } catch (error) {
     console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -331,12 +332,12 @@ router.get("/exam/galance", async (req, res) => {
   try {
     res.json({
       success: true,
-      data: await Exam.galance(req.query.id)
+      data: await Exam.galance(req.query.id),
     });
   } catch (error) {
     console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -360,7 +361,7 @@ router.get("/exam/detail", async (req, res) => {
   try {
     res.json({
       success: true,
-      data: await Exam.detail(req.query.id)
+      data: await Exam.detail(req.query.id),
     });
   } catch (error) {
     console.log(error);
@@ -371,14 +372,14 @@ router.get("/exam/detail", async (req, res) => {
 router.post("/createExam", async (req, res) => {
   res.json({
     success: true,
-    data: await Exam.create(req.body)
+    data: await Exam.create(req.body),
   });
 });
 
 router.post("/updateExam", async (req, res) => {
   res.json({
     success: true,
-    data: await Exam.update(req.body)
+    data: await Exam.update(req.body),
   });
 });
 

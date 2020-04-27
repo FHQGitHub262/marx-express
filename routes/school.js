@@ -11,7 +11,7 @@ router.get("/colleges", async (req, res) => {
 
   res.json({
     success: true,
-    data: query.map(college => college.dataValues)
+    data: query.map((college) => college.dataValues),
   });
 });
 
@@ -21,7 +21,7 @@ router.post("/createCollege", async (req, res) => {
   // console.log(query);
   res.json({
     success: true,
-    data: query.dataValues
+    data: query.dataValues,
   });
 });
 
@@ -29,7 +29,7 @@ router.get("/majors", async (req, res) => {
   const data = await Major.getAll(req.query.id);
   res.json({
     success: true,
-    data: data.map(major => major.dataValues)
+    data: data.map((major) => major.dataValues),
   });
 });
 
@@ -38,7 +38,7 @@ router.post("/createMajor", async (req, res) => {
   // console.log(query);
   res.json({
     success: true,
-    data: query.dataValues
+    data: query.dataValues,
   });
 });
 
@@ -46,7 +46,7 @@ router.get("/classes", async (req, res) => {
   const data = await AdministrationClass.getAll(req.query.id);
   res.json({
     success: true,
-    data: data.map(classes => classes.dataValues)
+    data: data.map((classes) => classes.dataValues),
   });
 });
 
@@ -59,15 +59,29 @@ router.post("/createClass", async (req, res) => {
   // console.log(query);
   res.json({
     success: true,
-    data: query.dataValues
+    data: query.dataValues,
   });
 });
 
 router.get("/students", async (req, res) => {
   res.json({
     success: true,
-    data: await Student.getAll({ AdministrationClassId: req.query.id })
+    data: await Student.getAll({ AdministrationClassId: req.query.id }),
   });
+});
+
+router.post("/student/import", async (req, res) => {
+  try {
+    await Student.import(req.body.filename, req.body.college);
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+    });
+  }
 });
 
 module.exports = router;

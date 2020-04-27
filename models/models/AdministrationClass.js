@@ -14,8 +14,8 @@ AdministrationClass.init(
     id: {
       type: Sequelize.STRING(100),
       primaryKey: true,
-      unique: true
-    }
+      unique: true,
+    },
   },
   { sequelize, modelName: "AdministrationClass" }
 );
@@ -23,21 +23,21 @@ AdministrationClass.init(
 exports.createClass = async (name, majorId) => {
   const major = await Major.model.findOne({
     where: {
-      id: majorId
-    }
+      id: majorId,
+    },
   });
 
   return major.createAdministrationClass({
     name,
-    id: Util.uuid()
+    id: Util.uuid(),
   });
 };
 
-exports.getAll = async majorId => {
+exports.getAll = async (majorId) => {
   const major = await Major.model.findOne({
     where: {
-      id: majorId
-    }
+      id: majorId,
+    },
   });
   if (!major) {
     return [];
@@ -48,15 +48,15 @@ exports.getAll = async majorId => {
 exports.addStudents = async (classId, studentList) => {
   const theClass = await AdministrationClass.findOne({
     where: {
-      id: classId
-    }
+      id: classId,
+    },
   });
   const students = await Student.model.findAll({
     where: {
       UserUuid: {
-        [Op.in]: studentList
-      }
-    }
+        [Op.in]: studentList,
+      },
+    },
   });
   return theClass.setStudents(students);
 };

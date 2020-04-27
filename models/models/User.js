@@ -9,23 +9,28 @@ User.init(
     uuid: {
       type: Sequelize.STRING(100),
       primaryKey: true,
-      unique: true
+      unique: true,
     },
     passwd: Sequelize.STRING(100),
     idnumber: { type: Sequelize.INTEGER(4), unique: true },
     privilege: Sequelize.STRING(100),
-    name: Sequelize.STRING(16)
+    name: Sequelize.STRING(16),
   },
   { sequelize, modelName: "User" }
 );
 
 exports.createUser = (passwd, idnumber, privilege, name = "") => {
-  return User.create({
-    uuid: Util.uuid(),
-    passwd,
-    idnumber,
-    privilege: JSON.stringify(privilege),
-    name
+  return User.findOrCreate({
+    where: {
+      idnumber,
+    },
+    defaults: {
+      uuid: Util.uuid(),
+      passwd,
+      idnumber,
+      privilege: JSON.stringify(privilege),
+      name,
+    },
   });
   // .then(res => console.log(res.dataValues))
   // .catch(e => console.log(e.sqlMessage, e.sqlState));
@@ -35,8 +40,8 @@ exports.login = async (idnumber, passwd) => {
   const res = await User.findOne({
     where: {
       idnumber,
-      passwd
-    }
+      passwd,
+    },
   });
   // console.log(res);
   if (res && res.dataValues.passwd === passwd) {
@@ -47,17 +52,17 @@ exports.login = async (idnumber, passwd) => {
   }
 };
 
-exports.resetPassword = uuid => {
+exports.resetPassword = (uuid) => {
   User.update(
     {
-      passwd: "123456"
+      passwd: "123456",
     },
     {
       where: {
-        uuid
-      }
+        uuid,
+      },
     }
-  ).then(res => console.log(res));
+  ).then((res) => console.log(res));
 };
 
 exports.updatePrivilege = async (newPrivilege, uuid) => {
@@ -65,18 +70,18 @@ exports.updatePrivilege = async (newPrivilege, uuid) => {
     if (Util.checkPrivilege(newPrivilege)) {
       const theUser = await User.findOne({
         where: {
-          uuid: uuid
-        }
+          uuid: uuid,
+        },
       });
       const res = await theUser.update({
         privilege: JSON.stringify(
           Array.from(
             new Set([
               ...JSON.parse(theUser.dataValues.privilege),
-              ...newPrivilege
+              ...newPrivilege,
             ])
           )
-        )
+        ),
       });
       return true;
     } else {

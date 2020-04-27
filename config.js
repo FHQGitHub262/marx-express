@@ -6,7 +6,7 @@ var config = {
   host: "129.204.218.96:3306",
   port: 3306,
   http: 4000,
-  redis: { host: "129.204.218.96", port: "6379", password: "mypassword" },
+  redis: { host: "129.204.218.96", port: "6380", password: "aptx4869" },
   cors: {
     credentials: true,
     exposedHeaders: ["Content-Disposition"],
@@ -17,10 +17,10 @@ var config = {
       /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:5000/,
       /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:5001/,
       /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:4000/,
-      /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:8080/
-    ]
+      /\d{0,3}.\d{0,3}.\d{0,3}.\d{0,3}:8080/,
+    ],
   },
-  redisTick: 10
+  redisTick: 10,
 };
 
 module.exports = config;

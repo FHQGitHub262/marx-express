@@ -6,7 +6,10 @@ var cookieParser = require("cookie-parser");
 const models = require("./models/index");
 const tasks = require("./schedule/tasks");
 const db = require("./models/db");
-db.sync();
+db.sync().then(() => {
+  console.log("here");
+  models.User.createUser("admin", 10000, ["admin"], "系统管理员");
+});
 const cors = require("cors");
 const logger = require("morgan");
 const session = require("express-session");
@@ -27,25 +30,25 @@ app.use(
   session({
     store: new RedisStore({
       client: cache,
-      prefix: "session"
+      prefix: "session",
     }),
     secret: "keyboard cat",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false }
+    cookie: { secure: false },
   })
 );
 app.use(logger("dev"));
 
 const multer = require("multer");
 const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
+  destination: function (req, file, cb) {
     cb(null, "./uploads/");
   },
-  filename: function(req, file, cb) {
+  filename: function (req, file, cb) {
     console.log();
     cb(null, Date.now() + "-" + file.originalname);
-  }
+  },
 });
 
 const upload = multer({ storage: storage });
@@ -79,12 +82,12 @@ app.use("/examination", examinationRouter);
 app.use("/school", schoolRouter);
 app.use("/client", clientRouter);
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};

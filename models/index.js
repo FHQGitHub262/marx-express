@@ -12,10 +12,10 @@ const model = {
   AdministrationClass: require("./models/AdministrationClass"),
   Major: require("./models/Major"),
   Paper: require("./models/Paper"),
-  Exam: require("./models/Exam")
+  Exam: require("./models/Exam"),
 };
 
-model.Student.model.belongsTo(model.User.model);
+model.Student.model.belongsTo(model.User.model, { foreignKey: "UserUuid" });
 // Teacher也是一种User
 model.Teacher.model.belongsTo(model.User.model);
 
@@ -42,27 +42,27 @@ model.Subject.model.hasMany(model.Course.model);
 model.Subject.model.hasMany(model.Chapter.model);
 // 问题和章节之间保持多对多关系，为后续预留操作空间
 model.Question.model.belongsToMany(model.Chapter.model, {
-  through: "ChapterQuestion"
+  through: "ChapterQuestion",
 });
 model.Chapter.model.belongsToMany(model.Question.model, {
-  through: "ChapterQuestion"
+  through: "ChapterQuestion",
 });
 
 // 学生可以加入多个教学班
 model.Course.model.belongsToMany(model.Student.model, {
-  through: "JoinCourse"
+  through: "JoinCourse",
   // otherKey: "userUuid"
 });
 model.Student.model.belongsToMany(model.Course.model, {
-  through: "JoinCourse"
+  through: "JoinCourse",
   // otherKey: "userUuid"
 });
 // 老师可以负责多个教学班
 model.Course.model.belongsToMany(model.Teacher.model, {
-  through: "GrantCourse"
+  through: "GrantCourse",
 });
 model.Teacher.model.belongsToMany(model.Course.model, {
-  through: "GrantCourse"
+  through: "GrantCourse",
 });
 
 /* 考试线 */
@@ -73,14 +73,14 @@ model.Course.model.belongsToMany(model.Exam.model, { through: "ExamPlan" });
 const Record = link.define("AnswerExam", {
   raw: Sequelize.TEXT,
   grade: Sequelize.INTEGER,
-  status: Sequelize.STRING
+  status: Sequelize.STRING,
 });
 model.Exam.model.belongsToMany(model.Student.model, {
-  through: Record
+  through: Record,
   // otherKey: "user"
 });
 model.Student.model.belongsToMany(model.Exam.model, {
-  through: Record
+  through: Record,
   // foreignKey: "UserUuid"
   // other: "UserUuid"
   // foreignKey: "examId",
@@ -92,16 +92,16 @@ model.Exam.model.belongsTo(model.Paper.model);
 // model.Paper.model.belongsToMany(model.Student.model, { through: Record });
 // 一份试卷由多个题目组成
 model.Question.model.belongsToMany(model.Paper.model, {
-  through: "PaperMakeUp"
+  through: "PaperMakeUp",
 });
 model.Paper.model.belongsToMany(model.Question.model, {
-  through: "PaperMakeUp"
+  through: "PaperMakeUp",
 });
 model.Paper.model.belongsToMany(model.Subject.model, {
-  through: "PaperBelongs"
+  through: "PaperBelongs",
 });
 model.Subject.model.belongsToMany(model.Paper.model, {
-  through: "PaperBelongs"
+  through: "PaperBelongs",
 });
 
 // link.sync();
