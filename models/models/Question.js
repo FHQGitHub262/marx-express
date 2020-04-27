@@ -154,9 +154,8 @@ exports.enable = (questionLists) => {
 exports.import = async (fileName, subjectId) => {
   const file = xlsx.parse(path.resolve(__dirname, "../../uploads", fileName));
   const belongsTable = {};
-  console.log(file);
+
   const raw = file.reduce((prev, current) => {
-    console.log(current.data);
     const data = (current.data || []).flatMap((item, index) => {
       if (item.length === 0) return [];
 
@@ -193,6 +192,8 @@ exports.import = async (fileName, subjectId) => {
         difficult: item[5],
       };
     });
+
+    console.log(data);
     return [...prev, ...data];
   }, []);
   await Question.bulkCreate(raw, {
