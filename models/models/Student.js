@@ -20,12 +20,15 @@ Student.init(
 );
 
 exports.createStudent = async (password, idNumber, name) => {
-  const user = await User.createUser(password, idNumber, ["student"], name);
-  const student = await Student.create({
-    name,
-    idNumber,
-  });
-  student.setUser(user);
+  const [user, student] = await Promise.all([
+    User.createUser(password, idNumber, ["student"], name),
+    await Student.create({
+      name,
+      idNumber,
+    }),
+  ]);
+  console.log("gere", user.dataValues);
+  return await student.setUser(user);
 };
 
 exports.getAll = async (config = {}) => {
@@ -40,7 +43,11 @@ exports.getCourse = async (studentId) => {
     },
   });
   if (theStudent)
-    return await theStudent.getCourses().map((item) => item.dataValues);
+    return await theStudent
+      .getCourses({
+        where: { status: "active" },
+      })
+      .map((item) => item.dataValues);
   else return [];
 };
 

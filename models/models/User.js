@@ -19,8 +19,8 @@ User.init(
   { sequelize, modelName: "User" }
 );
 
-exports.createUser = (passwd, idnumber, privilege, name = "") => {
-  return User.findOrCreate({
+exports.createUser = async (passwd, idnumber, privilege, name = "") => {
+  const user = await User.findOrCreate({
     where: {
       idnumber,
     },
@@ -32,6 +32,8 @@ exports.createUser = (passwd, idnumber, privilege, name = "") => {
       name,
     },
   });
+  if (user instanceof Array) return user[0] || undefined;
+  return user;
   // .then(res => console.log(res.dataValues))
   // .catch(e => console.log(e.sqlMessage, e.sqlState));
 };
@@ -43,11 +45,9 @@ exports.login = async (idnumber, passwd) => {
       passwd,
     },
   });
-  // console.log(res);
   if (res && res.dataValues.passwd === passwd) {
     return [true, res.dataValues];
   } else {
-    console.log(res.dataValues);
     return [false, {}];
   }
 };
@@ -63,6 +63,18 @@ exports.resetPassword = (uuid) => {
       },
     }
   ).then((res) => console.log(res));
+};
+
+exports.changePassword = (uuid, next) => {
+  return User.update(
+    {
+      passwd: next,
+    },
+    { where: { uuid } }
+  ).then((res) => {
+    console.log(res);
+    return res;
+  });
 };
 
 exports.updatePrivilege = async (newPrivilege, uuid) => {

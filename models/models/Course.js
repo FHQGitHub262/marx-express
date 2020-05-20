@@ -16,9 +16,9 @@ Course.init(
     id: {
       type: Sequelize.STRING(100),
       primaryKey: true,
-      unique: true
+      unique: true,
     },
-    status: Sequelize.STRING(10)
+    status: Sequelize.STRING(10),
   },
   { sequelize, modelName: "Course" }
 );
@@ -28,43 +28,43 @@ exports.create = async (name, subjectId) => {
     Course.create({
       name,
       status: "active",
-      id: Util.uuid()
+      id: Util.uuid(),
     }),
     Subject.model.findOne({
       where: {
-        id: subjectId
-      }
-    })
+        id: subjectId,
+      },
+    }),
   ]);
   await subject.setCourses([...(await subject.getCourses()), course]);
   return course;
 };
 
-exports.detail = async id => {
+exports.detail = async (id) => {
   const theCourse = await Course.findOne({ where: { id } });
   const [teacher, students] = await Promise.all([
     theCourse.getTeachers(),
-    theCourse.getStudents()
+    theCourse.getStudents(),
   ]);
 
   return {
-    teacher: teacher.map(item => item.dataValues.UserUuid),
-    students: students.map(item => item.dataValues.UserUuid)
+    teacher: teacher.map((item) => item.dataValues.UserUuid),
+    students: students.map((item) => item.dataValues.UserUuid),
   };
 };
 
 exports.addStudents = async (courseId, studentList) => {
   const theCourse = await Course.findOne({
     where: {
-      id: courseId
-    }
+      id: courseId,
+    },
   });
   const students = await Student.model.findAll({
     where: {
       UserUuid: {
-        [Op.in]: studentList
-      }
-    }
+        [Op.in]: studentList,
+      },
+    },
   });
   return theCourse.setStudents(students);
 };
@@ -72,15 +72,15 @@ exports.addStudents = async (courseId, studentList) => {
 exports.grantTo = async (courseId, teacherList) => {
   const theCourse = await Course.findOne({
     where: {
-      id: courseId
-    }
+      id: courseId,
+    },
   });
   const teachers = await Teacher.model.findAll({
     where: {
       UserUuid: {
-        [Op.in]: teacherList instanceof Array ? teacherList : [teacherList]
-      }
-    }
+        [Op.in]: teacherList instanceof Array ? teacherList : [teacherList],
+      },
+    },
   });
   return theCourse.addTeachers(teachers);
 };
@@ -89,23 +89,25 @@ exports.grantBatchTo = async (courseIds, teacherList) => {
   const theCourses = await Course.findAll({
     where: {
       id: {
-        [Sequelize.Op.in]: courseIds
-      }
-    }
+        [Sequelize.Op.in]: courseIds,
+      },
+    },
   });
   const teachers = await Teacher.model.findAll({
     where: {
       UserUuid: {
-        [Op.in]: teacherList instanceof Array ? teacherList : [teacherList]
-      }
-    }
+        [Op.in]: teacherList instanceof Array ? teacherList : [teacherList],
+      },
+    },
   });
-  return theCourses.map(item => item.addTeachers(teachers));
+  return theCourses.map((item) => item.addTeachers(teachers));
 };
 
-exports.getAll = async subjectId => {
+exports.getAll = async (subjectId) => {
   const subject = await Subject.model.findOne({
-    id: subjectId
+    where: {
+      id: subjectId,
+    },
   });
   // console.log(subject);
   return subject.getCourses();
@@ -113,30 +115,32 @@ exports.getAll = async subjectId => {
 
 exports.getAllForTeacher = async (subjectId, teacherId) => {
   const subject = await Subject.model.findOne({
-    id: subjectId
+    where: {
+      id: subjectId,
+    },
   });
   const theTeacher = await Teacher.model.findOne({
     where: {
-      UserUuid: teacherId
-    }
+      UserUuid: teacherId,
+    },
   });
   const teacherOwns = (await theTeacher.getCourses()).map(
-    item => item.dataValues.GrantCourse.CourseId
+    (item) => item.dataValues.GrantCourse.CourseId
   );
   return subject.getCourses({
     where: {
       id: {
-        [Sequelize.Op.in]: teacherOwns
-      }
-    }
+        [Sequelize.Op.in]: teacherOwns,
+      },
+    },
   });
 };
 
-exports.getExams = async courseId => {
+exports.getExams = async (courseId) => {
   const theCourse = await Course.findOne({
     where: {
-      id: courseId
-    }
+      id: courseId,
+    },
   });
   return await theCourse.getExams();
 };
@@ -146,20 +150,20 @@ exports.setStatus = (range, newStatus) => {
   if (range instanceof Array) {
     query = {
       where: {
-        id: { [Sequelize.Op.in]: range }
-      }
+        id: { [Sequelize.Op.in]: range },
+      },
     };
   } else {
     query = {
       where: {
-        id: range
-      }
+        id: range,
+      },
     };
   }
   console.log(query);
   return Course.update(
     {
-      status: newStatus
+      status: newStatus,
     },
     query
   );

@@ -8,10 +8,10 @@ const sequelize = new Sequelize(
     pool: {
       max: 5,
       min: 0,
-      idle: 30000
+      idle: 30000,
     },
     timezone: "+08:00",
-    logging: false
+    logging: false,
   }
 );
 

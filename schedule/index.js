@@ -11,7 +11,7 @@ subscriberClient.psubscribe("__keyevent@0__:expired");
 
 // 创建一个用于存放调度的队列的client
 const schedQueueClient = redis.createClient(config.redis);
-subscriberClient.on("pmessage", function(pattern, channel, expiredKey) {
+subscriberClient.on("pmessage", function (pattern, channel, expiredKey) {
   if (expiredKey.indexOf("session" === 0)) return;
   console.log("pmessage", expiredKey);
   const { event, data } = JSON.parse(expiredKey);
@@ -46,7 +46,7 @@ exports.scheduleToDo = (emitEvent, emitTime, emitData = "") => {
     testKey = JSON.stringify({
       event: emitEvent,
       data: emitData,
-      time: schedule
+      time: schedule,
     });
     schedQueueClient.set(
       JSON.stringify({ event: emitEvent, data: emitData, time: schedule }),
@@ -85,7 +85,7 @@ const emit = (eventName, data) => {
   console.log("[Schedule]", "Emit Event", eventName, "with", data);
   const handlers = eventTable[eventName] || [];
   if (handlers.length === 0) log("Unknow event", `"${eventName}"`);
-  handlers.forEach(foo => foo(data));
+  handlers.forEach((foo) => foo(data));
 };
 
 const log = (...args) => {
@@ -97,7 +97,7 @@ setInterval(() => {
   schedQueueClient.set("schedQueueTick", new Date().toLocaleString());
 }, 1000 * config.redisTick);
 
-subscriberClient.on("error", err => {
+subscriberClient.on("error", (err) => {
   console.log("[Schedule]", err);
 });
 

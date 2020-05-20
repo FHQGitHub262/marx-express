@@ -53,6 +53,45 @@ exports.arrayRandomPick = (array, targetLength) => {
   return result;
 };
 
+exports.arrayFill = (arrry, exsit, length, fn) => {
+  if (length + exsit.length >= arrry.length) {
+    return arrry;
+  }
+  const exist_ids = exsit.map((item) => fn(item));
+  const total_ids = arrry.map((item) => fn(item));
+  let final_ids = exist_ids;
+  while (final_ids.length < length + exist_ids.length) {
+    final_ids = Array.from(
+      new Set([
+        ...final_ids,
+        ...this.arrayRandomPick(
+          total_ids,
+          length + exist_ids.length - final_ids.length
+        ),
+      ])
+    );
+  }
+  const afterFill = arrry.reduce((prev, curr) => {
+    if (final_ids.indexOf(fn(curr)) >= 0) {
+      return [...prev, curr];
+    }
+    return prev;
+  }, []);
+  return afterFill;
+};
+
+exports.arraySlice = function (array, size) {
+  return Array(Math.ceil(array.length / size))
+    .fill(0)
+    .map((data, index) => {
+      console.log(size * index, Math.min(size * (index + 1), array.length));
+      return array.slice(
+        size * index,
+        Math.min(size * (index + 1), array.length)
+      );
+    });
+};
+
 /**
  * 读取路径信息
  * @param {string} path 路径

@@ -95,11 +95,12 @@ router.get("/students", async (req, res) => {
 
 router.get("/courses", async (req, res) => {
   let course;
+  console.log(req.query.id);
   if (req.session.user.privilege.indexOf("admin") >= 0) {
-    course = await Course.getAll(req.body.id);
+    course = await Course.getAll(req.query.id);
   } else {
     console.log("unadmin", req.session.user);
-    course = await Course.getAllForTeacher(req.body.id, req.session.user.uuid);
+    course = await Course.getAllForTeacher(req.query.id, req.session.user.uuid);
   }
   res.json({
     success: true,
@@ -182,15 +183,21 @@ router.post("/updateCourse", async (req, res) => {
     });
 
     const [students = [], teachers = []] = await Promise.all([
-      Student.model.findOne({
+      Student.model.findAll({
         where: { UserUuid: { [Sequelize.Op.in]: req.body.studentList } },
       }),
       Teacher.model.findAll({
         where: { UserUuid: { [Sequelize.Op.in]: [req.body.teacher] } },
       }),
     ]);
-    await course.addStudents(students);
-    await course.addTeachers(teachers);
+
+    await Promise.all([course.setStudents([]), await course.setTeachers([])]);
+
+    await Promise.all([
+      course.addStudents(students),
+      course.addTeachers(teachers),
+    ]);
+    // await course.setStudents(students);
 
     res.json({
       success: true,
@@ -240,7 +247,8 @@ router.get("/questions", async (req, res) => {
     data: await Question.getAll(
       req.query.id,
       req.query.type || undefined,
-      req.query.forceEnabled
+      req.query.forceEnabled,
+      req.query.forExam || ""
     ),
   });
 });

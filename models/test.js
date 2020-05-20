@@ -35,7 +35,7 @@ const init = async () => {
   await link.sync();
   console.log("Sync db ok.");
   // 创建教师
-  // Teacher.createTeacher("10086", "10001", "Test Teacher").then(res =>
+  // Teacher.createTeacher("10086", "10001", "Test Teacher").then((res) =>
   //   console.log(res.dataValues)
   // );
   // Teacher.createTeacher("aptx4869", "16041519", "zuoteng.jzt");
@@ -43,9 +43,7 @@ const init = async () => {
   // Teacher.getAll()
 
   // 创建学生
-  // Student.createStudent("123456", "17041801", "测试学生").then(res =>
-  //   console.log(res)
-  // );
+  // Student.createStudent("123456", "17041801", "测试学生");
   // Student.createStudent("123456", "17041802", "Test 2").then(res =>
   //   console.log(res)
   // );
@@ -300,11 +298,13 @@ const init = async () => {
   // Exam.output("af345990-5d4d-11ea-b561-0b01b59f44b1").then(res => {
   //   require("fs").writeFileSync("./test.xlsx", res);
   // });
-  Question.import("第一章.xlsx", "85184260-5a29-11ea-8b90-85dea84c548a").then(
-    (res) => {
-      console.log(res.slice(-5));
-    }
-  );
+  // Question.import("第一章.xlsx", "85184260-5a29-11ea-8b90-85dea84c548a").then(
+  //   (res) => {
+  //     console.log(res.slice(-5));
+  //   }
+  // );
+  // Exam.prepare("3c1e4a6e-df25-4e58-89ba-ba9a2e81b6bd");
+  // Exam.judge("3c1e4a6e-df25-4e58-89ba-ba9a2e81b6bd");
 };
 
 init();

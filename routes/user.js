@@ -4,25 +4,25 @@ var router = express.Router();
 const User = require("../models/models/User");
 
 /* GET users listing. */
-router.get("/", function(req, res, next) {
+router.get("/", function (req, res, next) {
   res.send("respond with a resource");
 });
 
 // #DONE
 router.post("/info", (req, res) => {
   try {
-    console.log(req.session.user);
+    // console.log(req.session.user);
     const success =
       Boolean(req.session.user) && Object.keys(req.session.user).length !== 0;
 
     res.json({
       success,
-      data: req.session.user || {}
+      data: req.session.user || {},
     });
   } catch (error) {
     console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -44,7 +44,7 @@ router.post("/login", async (req, res) => {
     req.body.uuid,
     req.body.password
   );
-  console.log(userInfo);
+  // console.log(userInfo);
 
   req.session.user = userInfo;
   res.json({ success, data: userInfo });
@@ -56,23 +56,24 @@ router.post("/resetPassword", async (req, res) => {
   const result = await User.resetPassword(req.body.uuid);
   console.log(result);
   res.json({
-    success: true
+    success: true,
   });
 });
 
 router.post("/set_admin", async (req, res) => {
   try {
     if (req.session.user.privilege.indexOf("admin")) {
+      console.log(req.body.id);
       User.updatePrivilege(["admin"], req.body.id);
       res.json({
-        success: true
+        success: true,
       });
     } else {
       throw new Error();
     }
   } catch (error) {
     res.json({
-      success: false
+      success: false,
     });
   }
 });

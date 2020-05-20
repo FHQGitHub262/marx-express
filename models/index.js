@@ -17,7 +17,7 @@ const model = {
 
 model.Student.model.belongsTo(model.User.model, { foreignKey: "UserUuid" });
 // Teacher也是一种User
-model.Teacher.model.belongsTo(model.User.model);
+model.Teacher.model.belongsTo(model.User.model, { foreignKey: "UserUuid" });
 
 /* 学籍线 */
 // College包含多个Major

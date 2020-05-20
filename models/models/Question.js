@@ -15,8 +15,8 @@ Question.init(
       primaryKey: true,
       unique: true,
     },
-    title: Sequelize.STRING(100),
-    right: Sequelize.STRING(10),
+    title: Sequelize.TEXT,
+    right: Sequelize.STRING(60),
     type: Sequelize.STRING(20),
     enable: Sequelize.BOOLEAN,
     detail: Sequelize.TEXT,
@@ -26,6 +26,8 @@ Question.init(
   },
   { sequelize, modelName: "Question" }
 );
+
+Question.sync({ alter: true });
 
 exports.create = async (
   config = {
@@ -107,7 +109,7 @@ exports.detail = async (id) => {
   return target.dataValues;
 };
 
-exports.getAll = async (chapterId, type, forceEnable = false) => {
+exports.getAll = async (chapterId, type, forceEnable = false, forExam = "") => {
   const chapter = await Chapter.model.findOne({
     where: { id: chapterId },
     // attributes: ["id", "title", "type", "usage"]
@@ -117,11 +119,14 @@ exports.getAll = async (chapterId, type, forceEnable = false) => {
   if (type) {
     search.type = type;
   }
-  console.log(forceEnable);
+  if (forExam !== "") {
+    search.usage = forExam === "false" ? false : true;
+  }
+
   if (forceEnable) {
-    console.log("here");
     search.enable = true;
   }
+
   return chapter.getQuestions({ where: search });
 };
 
@@ -159,7 +164,7 @@ exports.import = async (fileName, subjectId) => {
     const data = (current.data || [])
       .map((item, index) => {
         if (item.length === 0) return [];
-
+        console.log(item);
         if (index === 0) return [];
         item[5] = String(item[5]);
         const id = Util.hashString(item[2]);
@@ -201,12 +206,16 @@ exports.import = async (fileName, subjectId) => {
         }
       }, []);
 
-    console.log(data);
     return [...prev, ...data];
   }, []);
-  await Question.bulkCreate(raw, {
-    updateOnDuplicate: ["title", "right", "detail"],
-  });
+  await Promise.all(
+    Util.arraySlice(raw, 50).map((data) =>
+      Question.bulkCreate(data, {
+        updateOnDuplicate: ["title", "right", "detail"],
+      })
+    )
+  );
+
   const targetSubject = await Subject.model.findOne({
     where: { id: subjectId },
   });

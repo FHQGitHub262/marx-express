@@ -8,9 +8,9 @@ router.get("/papers", async (req, res) => {
     if (req.session.user.privilege.indexOf("admin") >= 0) {
       res.json({
         success: true,
-        data: await Paper.getAll(req.query.usage).then(res =>
-          (res || []).map(item => item.dataValues)
-        )
+        data: await Paper.getAll(req.query.usage).then((res) =>
+          (res || []).map((item) => item.dataValues)
+        ),
       });
     } else {
       res.json({
@@ -18,13 +18,13 @@ router.get("/papers", async (req, res) => {
         data: await Paper.getAllForTeacher(
           req.session.user.uuid,
           req.query.usage
-        ).then(res => (res || []).map(item => item.dataValues))
+        ).then((res) => (res || []).map((item) => item.dataValues)),
       });
     }
   } catch (error) {
     console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });
@@ -32,7 +32,7 @@ router.get("/papers", async (req, res) => {
 router.post("/createPaper", async (req, res) => {
   res.json({
     success: true,
-    data: await Paper.createPaper(req.body)
+    data: await Paper.createPaper(req.body),
   });
 });
 
@@ -40,11 +40,12 @@ router.post("/updatePaper", async (req, res) => {
   try {
     await Paper.updatePaper(req.body);
     res.json({
-      success: true
+      success: true,
     });
   } catch (error) {
+    console.log(error);
     res.json({
-      success: false
+      success: false,
     });
   }
 });

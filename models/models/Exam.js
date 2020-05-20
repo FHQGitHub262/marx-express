@@ -18,45 +18,46 @@ Exam.init(
     id: {
       type: Sequelize.STRING(100),
       primaryKey: true,
-      unique: true
+      unique: true,
     },
     // status: Sequelize.STRING,
     startAt: Sequelize.BIGINT,
     endAt: Sequelize.BIGINT,
-    usage: Sequelize.BOOLEAN
+    usage: Sequelize.BOOLEAN,
   },
   { sequelize, modelName: "Exam" }
 );
 
-exports.create = async config => {
+exports.create = async (config) => {
   const [exam, paper, students, courses] = await Promise.all([
     Exam.create({
       name: config.name,
       startAt: new Date(config.startAt).getTime(),
       endAt: new Date(config.endAt).getTime(),
       usage: config.type === "true" ? true : false,
-      id: Util.uuid()
+      id: Util.uuid(),
+      ratio: config.ratio,
       // status: "INIT"
     }),
     Paper.model.findOne({
       where: {
-        id: config.paperId
-      }
+        id: config.paperId,
+      },
     }),
     Student.model.findAll({
       where: {
         UserUuid: {
-          [Sequelize.Op.in]: config.range.students
-        }
-      }
+          [Sequelize.Op.in]: config.range.students,
+        },
+      },
     }),
     Course.model.findAll({
       where: {
         id: {
-          [Sequelize.Op.in]: config.range.courses
-        }
-      }
-    })
+          [Sequelize.Op.in]: config.range.courses,
+        },
+      },
+    }),
   ]);
   // 创建考试本身
   // 将学生添加到考试中
@@ -68,17 +69,17 @@ exports.create = async config => {
     exam.setPaper(paper),
     exam.setStudents(students, {
       through: {
-        status: "BEFORE"
-      }
+        status: "BEFORE",
+      },
     }),
-    exam.setCourses(courses)
+    exam.setCourses(courses),
   ]);
   // 创建定时任务，考试前一天prepare考试
   Task.scheduleToDo(
     "prepare_exam",
     new Date(config.startAt).getTime() - 24 * 60 * 60 * 1000,
     JSON.stringify({
-      id: exam.dataValues.id
+      id: exam.dataValues.id,
     })
   );
 
@@ -87,7 +88,7 @@ exports.create = async config => {
     "judge_exam",
     new Date(config.endAt).getTime() - 60 * 1000,
     JSON.stringify({
-      id: exam.dataValues.id
+      id: exam.dataValues.id,
     })
   );
 
@@ -96,24 +97,24 @@ exports.create = async config => {
     "cleanup_exam",
     new Date(config.endAt).getTime() + 60 * 1000 * 60,
     JSON.stringify({
-      id: exam.dataValues.id
+      id: exam.dataValues.id,
     })
   );
 
   return exam;
 };
 
-exports.detail = async id => {
+exports.detail = async (id) => {
   const theExam = await Exam.findOne({
-    where: { id: id }
+    where: { id: id },
   });
   const [courses, students] = await Promise.all([
     theExam.getCourses(),
-    theExam.getStudents()
+    theExam.getStudents(),
   ]);
   return {
-    courses: courses.map(item => item.dataValues.id),
-    students: students.map(item => item.dataValues.UserUuid)
+    courses: courses.map((item) => item.dataValues.id),
+    students: students.map((item) => item.dataValues.UserUuid),
   };
 };
 
@@ -121,16 +122,16 @@ exports.getAll = async () => {
   return await Exam.findAll();
 };
 
-exports.getAllForTeacher = async teacherId => {
+exports.getAllForTeacher = async (teacherId) => {
   const theTeacher = await Teacher.model.findOne({
     where: {
-      UserUuid: teacherId
-    }
+      UserUuid: teacherId,
+    },
   });
   const grantedCourse = await theTeacher.getCourses();
   const hash = [];
   const theExams = (
-    await Promise.all(grantedCourse.map(course => course.getExams()))
+    await Promise.all(grantedCourse.map((course) => course.getExams()))
   )
     .reduce((prev, current) => {
       return [...prev, ...current];
@@ -146,38 +147,236 @@ exports.getAllForTeacher = async teacherId => {
   return theExams;
 };
 
-exports.prepare = async examId => {
-  const theExam = await Exam.findOne({
-    where: {
-      id: examId
-    }
-  });
+exports.prepare = async (examId) => {
+  const exchange = {
+    easy: "易",
+    medium: "中",
+    hard: "难",
+    易: "easy",
+    中: "medium",
+    难: "hard",
+  };
+  // 获取exam信息
+  const theExam = await Exam.findOne({ where: { id: examId } });
+
+  // 获取paper和student
   const [thePaperElement, theStudents] = await Promise.all([
     theExam.getPaper(),
     theExam.getStudents({
-      attributes: ["UserUuid", "idNumber"]
-    })
+      attributes: ["UserUuid", "idNumber"],
+    }),
+  ]);
+
+  const thePaper = thePaperElement.dataValues;
+  // 初始化limitr
+  const limiter = JSON.parse(String(thePaper.limiter));
+  const ratio = JSON.parse(thePaper.ratio);
+  const total = Object.values(limiter).reduce(
+    (prev, current) => prev + current,
+    0
+  );
+  const totalName = ["totalTrueFalse", "totalSingle", "totalMulti"];
+
+  let index = 0;
+  const data = {};
+  for (let type of ["trueFalse", "single", "multi"]) {
+    const totalValue = thePaper[totalName[index]];
+    const chapters = Object.keys(limiter);
+    data[type] = chapters.reduce((prev, current) => {
+      return {
+        ...prev,
+        [current]: {
+          total: {
+            length: 0,
+            count: Math.ceil((totalValue * limiter[current]) / total),
+          },
+          easy: {
+            count: Math.ceil(
+              (((totalValue * limiter[current]) / total) * ratio[0]) / 10
+            ),
+            data: [],
+          },
+          medium: {
+            count: Math.ceil(
+              (((totalValue * limiter[current]) / total) *
+                (ratio[1] - ratio[0])) /
+                10
+            ),
+            data: [],
+          },
+          hard: {
+            count: Math.ceil(
+              (((totalValue * limiter[current]) / total) * (10 - ratio[1])) / 10
+            ),
+            data: [],
+          },
+        },
+      };
+    }, {});
+
+    index++;
+  }
+
+  // 获取题目数据
+  let theQuestionsData = [];
+  const theQuestions = await thePaperElement.getQuestions({
+    attributes: ["id", "title", "detail", "difficult", "type"],
+    where: {
+      enable: true,
+    },
+  });
+  for (current of theQuestions) {
+    theQuestionsData.push({
+      id: current.dataValues.id,
+      title: current.dataValues.title,
+      detail: current.dataValues.detail,
+      difficult: current.dataValues.difficult,
+      type: current.dataValues.type,
+      chapter: (await current.getChapters())[0].dataValues.id,
+    });
+  }
+
+  theQuestionsData = Util.arrayGroupBy(theQuestionsData, (item) => item.type);
+  const typeKeys = Object.keys(theQuestionsData);
+  for (let i = 0; i < typeKeys.length; i++) {
+    let groupByCourse = Util.arrayGroupBy(
+      theQuestionsData[typeKeys[i]],
+      (element) => element.chapter
+    );
+
+    let groups = Object.keys(groupByCourse);
+    for (let j = 0; j < groups.length; j++) {
+      groupByCourse[groups[j]] = Util.arrayGroupBy(
+        groupByCourse[groups[j]],
+        (element) => element.difficult
+      );
+    }
+    theQuestionsData[typeKeys[i]] = groupByCourse;
+  }
+  // 整理成了 类型 - 章节 - 难度的三级结构
+
+  // 对每个学生处理一次，生成只有ID的试卷
+  const targetPath = path.resolve(
+    __dirname,
+    "../../public/temp",
+    `./${theExam.id}`
+  );
+  await Util.rmdir(targetPath);
+  await Util.dirExists(targetPath);
+  // 每一次生成试卷就保存到本地，保存到对应examId目录下，以学生uuid保存文件
+  theStudents.forEach((student) => {
+    let paper = {};
+
+    let raw = {
+      trueFalse: [],
+      single: [],
+      multi: [],
+    };
+    // 开始遍历，按照类型分别取做，判断各个章节的各个难度是否足够，足够就任意取需要的，不足够就全部拿
+    const nameExchange = {
+      trueFalse: "totalTrueFalse",
+      single: "totalSingle",
+      multi: "totalMulti",
+    };
+
+    for (let i = 0; i < typeKeys.length; i++) {
+      const typeKey = typeKeys[i];
+      const chapters = Object.keys(theQuestionsData[typeKey]);
+      raw[typeKey] = Object.values(theQuestionsData[typeKey])
+        .map((item, index) => {
+          const chapterId = chapters[index];
+          const difficults = Object.keys(item);
+
+          const firstPick = difficults
+            .map((_diff) => {
+              const elem = item[_diff];
+              return Util.arrayRandomPick(
+                elem,
+                data[typeKey][chapterId][exchange[_diff]].count
+              );
+            })
+            .reduce((prev, curr) => [...prev, ...curr], []);
+
+          const total = Object.values(item).reduce((prev, curr) => {
+            return [...prev, ...curr];
+          }, []);
+
+          const secondPick = Util.arrayFill(
+            total,
+            firstPick,
+            data[typeKey][chapterId].total.count - firstPick.length,
+            (elem) => elem.id
+          );
+          return secondPick;
+        })
+        .reduce((prev, curr) => [...prev, ...curr], [])
+        .splice(0, thePaper[nameExchange[typeKey]]);
+
+      if (raw[typeKey].length === thePaper[nameExchange[typeKey]]) continue;
+
+      let total = Object.values(theQuestionsData[typeKey]).reduce(
+        (prev, curr) => {
+          return [
+            ...prev,
+            ...Object.values(curr).reduce((subprev, subcurr) => {
+              return [...subprev, ...subcurr];
+            }, []),
+          ];
+        },
+        []
+      );
+
+      raw[typeKey] = Util.arrayFill(
+        total,
+        raw[typeKey],
+        thePaper[nameExchange[typeKey]] - raw[typeKey].length,
+        (item) => item.id
+      );
+    }
+
+    fs.writeFileSync(
+      path.resolve(targetPath, `./${student.dataValues.UserUuid}.json`),
+      JSON.stringify({
+        exam: theExam.dataValues,
+        paper: raw,
+      })
+    );
+  });
+};
+
+exports._prepare = async (examId) => {
+  const theExam = await Exam.findOne({ where: { id: examId } });
+  const [thePaperElement, theStudents] = await Promise.all([
+    theExam.getPaper(),
+    theExam.getStudents({
+      attributes: ["UserUuid", "idNumber"],
+    }),
   ]);
   const thePaper = thePaperElement.dataValues;
   let theQuestionsData = {};
   const theQuestions = await thePaperElement.getQuestions({
-    attributes: ["id", "title", "detail"]
+    attributes: ["id", "title", "detail"],
   });
-  theQuestions.forEach(elem => {
+  theQuestions.forEach((elem) => {
     theQuestionsData[elem.dataValues.id] = {
       title: elem.dataValues.title,
       detail: JSON.parse(elem.dataValues.detail),
-      id: elem.dataValues.id
+      id: elem.dataValues.id,
     };
   });
   const quezRange = Util.arrayGroupBy(
     (
       await thePaperElement.getQuestions({
-        attributes: ["id", "type"]
+        attributes: ["id", "type"],
       })
-    ).map(item => item.dataValues),
-    element => element.type
+    ).map((item) => {
+      console.log(item.dataValues);
+      return item.dataValues;
+    }),
+    (element) => element.type
   );
+
+  console.log(quezRange);
 
   // 对每个学生处理一次，生成只有ID的试卷
   const targetPath = path.resolve(
@@ -187,21 +386,21 @@ exports.prepare = async examId => {
   );
   await Util.dirExists(targetPath);
   // 每一次生成试卷就保存到本地，保存到对应examId目录下，以学生uuid保存文件
-  theStudents.forEach(student => {
+  theStudents.forEach((student) => {
     let paper = {};
 
     const totalTags = ["totalSingle", "totalMulti", "totalTrueFalse"];
     ["single", "multi", "trueFalse"].forEach((item, index) => {
       paper[item] = Util.arrayRandomPick(
-        quezRange[item],
+        quezRange[item] || [],
         thePaper[totalTags[index]]
-      ).map(item => theQuestionsData[item.id]);
+      ).map((item) => theQuestionsData[item.id]);
     });
     fs.writeFileSync(
       path.resolve(targetPath, `./${student.dataValues.UserUuid}.json`),
       JSON.stringify({
         exam: theExam.dataValues,
-        paper
+        paper,
       })
     );
   });
@@ -216,59 +415,59 @@ exports.prepare = async examId => {
 exports.finishup = async (examId, studentId, examDeatail) => {
   const theExam = await Exam.findOne({
     where: {
-      id: examId
-    }
+      id: examId,
+    },
   });
   const theStudent = await Student.model.findOne({
     where: {
-      UserUuid: studentId
-    }
+      UserUuid: studentId,
+    },
   });
   return await theExam.addStudent(theStudent, {
     through: {
       raw: JSON.stringify(examDeatail),
-      status: "FIN"
-    }
+      status: "FIN",
+    },
   });
 };
 
 exports.getReview = async (examId, studentId) => {
   const theExam = await Exam.findOne({
     where: {
-      id: examId
-    }
+      id: examId,
+    },
   });
   return (
     await theExam.getStudents({
       where: {
-        UserUuid: studentId
-      }
+        UserUuid: studentId,
+      },
     })
-  ).map(item => item.dataValues.AnswerExam);
+  ).map((item) => item.dataValues.AnswerExam);
 };
 
-exports.judge = async examId => {
+exports.judge = async (examId) => {
   const theExam = await Exam.findOne({ where: { id: examId } });
   const thePaper = (await (await theExam.getPaper()).getQuestions())
-    .map(item => ({
+    .map((item) => ({
       id: item.id,
       right: item.right,
-      type: item.type
+      type: item.type,
     }))
     .reduce(
       (prev, current) => ({
         ...prev,
-        [current.id]: { right: current.right, type: current.type }
+        [current.id]: { right: current.right, type: current.type },
       }),
       {}
     );
   const records = await theExam.getStudents();
-  records.forEach(async item => {
-    const raw = JSON.parse(item.dataValues.AnswerExam.raw);
+  records.forEach(async (item) => {
+    const raw = JSON.parse(item.dataValues.AnswerExam.raw || "{}");
     const answers = Object.values(raw).reduce(
       (prev, current) => ({
         ...current,
-        ...prev
+        ...prev,
       }),
       {}
     );
@@ -280,8 +479,8 @@ exports.judge = async examId => {
 
     await theExam.addStudent(item, {
       through: {
-        grade
-      }
+        grade,
+      },
     });
   });
 };
@@ -292,7 +491,7 @@ const judgeQuestion = (answer, raw) => {
       return answer === JSON.parse(raw.right)[0] ? 1 : 0;
     }
     case "trueFalse": {
-      return String(answer) === JSON.parse(raw.right)[0] ? 1 : 0;
+      return String(answer).toUpperCase() === JSON.parse(raw.right)[0] ? 1 : 0;
     }
     case "multi": {
       const answerList = Array.from(new Set(answer || []));
@@ -308,7 +507,7 @@ const judgeQuestion = (answer, raw) => {
   }
 };
 
-exports.galance = async examId => {
+exports.galance = async (examId) => {
   const theExam = await Exam.findOne({ where: { id: examId } });
   const thePaper = await theExam.getPaper();
   const total =
@@ -316,18 +515,18 @@ exports.galance = async examId => {
     thePaper.dataValues.totalMulti +
     thePaper.dataValues.totalTrueFalse;
   console.log(thePaper);
-  const record = (await theExam.getStudents()).map(item => ({
+  const record = (await theExam.getStudents()).map((item) => ({
     id: item.dataValues.UserUuid,
     idNumber: item.dataValues.idNumber,
     grade: item.dataValues.AnswerExam.grade,
-    name: item.dataValues.name
+    name: item.dataValues.name,
   }));
   let statistics = {
     max: 0,
     pass: 0,
-    average: 0
+    average: 0,
   };
-  record.forEach(item => {
+  record.forEach((item) => {
     statistics.max = statistics.max > item.grade ? statistics.max : item.grade;
     statistics.pass = statistics.pass + item.grade > 0.6 * total ? 1 : 0;
     statistics.average = statistics.average + item.grade;
@@ -335,33 +534,34 @@ exports.galance = async examId => {
   statistics.average = statistics.average / record.length;
   return {
     record,
-    statistics: statistics
+    statistics: statistics,
   };
 };
 
-exports.output = async examId => {
+exports.output = async (examId) => {
   var xlsx = require("node-xlsx").default;
 
   const data = [["学号", "姓名", "分数"]];
 
   const theExam = await Exam.findOne({ where: { id: examId } });
 
-  const record = (await theExam.getStudents()).map(item => [
+  const record = (await theExam.getStudents()).map((item) => [
     // id: item.dataValues.UserUuid,
     item.dataValues.idNumber,
     item.dataValues.name,
-    item.dataValues.AnswerExam.grade
+    item.dataValues.AnswerExam.grade,
   ]);
 
   return {
     name: theExam.dataValues.name,
-    buf: xlsx.build([{ name: "考试详情", data: [...data, ...record] }])
+    buf: xlsx.build([{ name: "考试详情", data: [...data, ...record] }]),
   }; // Returns a buffer
 };
 
-exports.update = async config => {
+exports.update = async (config) => {
+  console.log("config", config);
   const theExam = await Exam.findOne({
-    where: { id: config.id }
+    where: { id: config.id },
   });
   const prevStart = theExam.dataValues.startAt;
   const prevEnd = theExam.dataValues.endAt;
@@ -372,27 +572,27 @@ exports.update = async config => {
       ...config,
       startAt: new Date(config.startAt).getTime(),
       endAt: new Date(config.endAt).getTime(),
-      usage: config.type === "true" ? true : false
+      usage: config.type === "true" ? true : false,
     }),
     Paper.model.findOne({
       where: {
-        id: config.paperId
-      }
+        id: config.paperId,
+      },
     }),
     Student.model.findAll({
       where: {
         UserUuid: {
-          [Sequelize.Op.in]: config.range.students
-        }
-      }
+          [Sequelize.Op.in]: config.range.students,
+        },
+      },
     }),
     Course.model.findAll({
       where: {
         id: {
-          [Sequelize.Op.in]: config.range.courses
-        }
-      }
-    })
+          [Sequelize.Op.in]: config.range.courses,
+        },
+      },
+    }),
   ]);
   // 创建考试本身
   // 将学生添加到考试中
@@ -404,10 +604,10 @@ exports.update = async config => {
     exam.setPaper(paper),
     exam.setStudents(students, {
       through: {
-        status: "BEFORE"
-      }
+        status: "BEFORE",
+      },
     }),
-    exam.setCourses(courses)
+    exam.setCourses(courses),
   ]);
 
   // 取消定时任务
@@ -415,7 +615,7 @@ exports.update = async config => {
     "prepare_exam",
     new Date(prevStart).getTime() - 24 * 60 * 60 * 1000,
     JSON.stringify({
-      id: exam.dataValues.id
+      id: exam.dataValues.id,
     })
   );
 
@@ -424,7 +624,7 @@ exports.update = async config => {
     "judge_exam",
     new Date(prevEnd).getTime() - 60 * 1000,
     JSON.stringify({
-      id: exam.dataValues.id
+      id: exam.dataValues.id,
     })
   );
 
@@ -432,7 +632,7 @@ exports.update = async config => {
     "cleanup_exam",
     new Date(prevEnd).getTime() + 60 * 1000 * 60,
     JSON.stringify({
-      id: exam.dataValues.id
+      id: exam.dataValues.id,
     })
   );
 
@@ -441,7 +641,7 @@ exports.update = async config => {
     "prepare_exam",
     new Date(config.startAt).getTime() - 24 * 60 * 60 * 1000,
     JSON.stringify({
-      id: exam.dataValues.id
+      id: exam.dataValues.id,
     })
   );
 
@@ -450,7 +650,7 @@ exports.update = async config => {
     "judge_exam",
     new Date(config.endAt).getTime() - 60 * 1000,
     JSON.stringify({
-      id: exam.dataValues.id
+      id: exam.dataValues.id,
     })
   );
 
@@ -459,7 +659,7 @@ exports.update = async config => {
     "cleanup_exam",
     new Date(config.endAt).getTime() + 60 * 1000 * 60,
     JSON.stringify({
-      id: exam.dataValues.id
+      id: exam.dataValues.id,
     })
   );
 

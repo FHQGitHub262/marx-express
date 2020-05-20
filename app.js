@@ -7,7 +7,7 @@ const models = require("./models/index");
 const tasks = require("./schedule/tasks");
 const db = require("./models/db");
 db.sync().then(() => {
-  console.log("here");
+  console.log("[ORM]", "Data inited");
   models.User.createUser("admin", 10000, ["admin"], "系统管理员");
 });
 const cors = require("cors");
