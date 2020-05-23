@@ -8,7 +8,7 @@ router.get("/papers", async (req, res) => {
     if (req.session.user.privilege.indexOf("admin") >= 0) {
       res.json({
         success: true,
-        data: await Paper.getAll(req.query.usage).then((res) =>
+        data: await Paper.getAll(req.query.usage, req.query.id).then((res) =>
           (res || []).map((item) => item.dataValues)
         ),
       });
@@ -17,7 +17,8 @@ router.get("/papers", async (req, res) => {
         success: true,
         data: await Paper.getAllForTeacher(
           req.session.user.uuid,
-          req.query.usage
+          req.query.usage,
+          req.query.id
         ).then((res) => (res || []).map((item) => item.dataValues)),
       });
     }

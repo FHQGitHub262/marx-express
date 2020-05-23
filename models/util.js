@@ -53,6 +53,13 @@ exports.arrayRandomPick = (array, targetLength) => {
   return result;
 };
 
+exports.arraySyncFilter = async function (array, callback) {
+  let filterResult = await Promise.all(array.map(callback));
+  // > [true, false, true]
+
+  return array.filter((_, index) => filterResult[index]);
+};
+
 exports.arrayFill = (arrry, exsit, length, fn) => {
   if (length + exsit.length >= arrry.length) {
     return arrry;

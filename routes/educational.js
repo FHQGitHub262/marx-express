@@ -94,18 +94,32 @@ router.get("/students", async (req, res) => {
 });
 
 router.get("/courses", async (req, res) => {
-  let course;
-  console.log(req.query.id);
-  if (req.session.user.privilege.indexOf("admin") >= 0) {
-    course = await Course.getAll(req.query.id);
-  } else {
-    console.log("unadmin", req.session.user);
-    course = await Course.getAllForTeacher(req.query.id, req.session.user.uuid);
+  try {
+    let course;
+    if (req.query.id === "") {
+      res.json({
+        success: true,
+        data: [],
+      });
+    } else if (req.session.user.privilege.indexOf("admin") >= 0) {
+      console.log(req.query.id);
+      course = await Course.getAll(req.query.id);
+    } else {
+      console.log("unadmin", req.session.user);
+      course = await Course.getAllForTeacher(
+        req.query.id,
+        req.session.user.uuid
+      );
+    }
+    res.json({
+      success: true,
+      data: course.map((item) => item.dataValues),
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+    });
   }
-  res.json({
-    success: true,
-    data: course.map((item) => item.dataValues),
-  });
 });
 
 router.get("/course/detail", async (req, res) => {
@@ -225,11 +239,24 @@ router.post("/grantCourse", async (req, res) => {
 });
 
 router.get("/chapters", async (req, res) => {
-  const query = await Chapter.getAll(req.query.id);
-  res.json({
-    success: true,
-    data: query.map((item) => item.dataValues),
-  });
+  try {
+    if (req.query.id === "") {
+      res.json({
+        success: true,
+        data: [],
+      });
+    } else {
+      const query = await Chapter.getAll(req.query.id);
+      res.json({
+        success: true,
+        data: query.map((item) => item.dataValues),
+      });
+    }
+  } catch (error) {
+    res.json({
+      success: false,
+    });
+  }
 });
 
 router.post("/createChapter", async (req, res) => {
@@ -300,14 +327,23 @@ router.get("/exams", async (req, res) => {
     if (req.session.user.privilege.indexOf("admin") > 0) {
       res.json({
         success: true,
-        data: (await Exam.getAll()).map((res) => res.dataValues),
+        data: (
+          await Exam.getAll(
+            req.query.id || "",
+            JSON.parse(req.query.range || "[]")
+          )
+        ).map((res) => res.dataValues),
       });
     } else {
       res.json({
         success: true,
-        data: (await Exam.getAllForTeacher(req.session.user.uuid)).map(
-          (res) => res.dataValues
-        ),
+        data: (
+          await Exam.getAllForTeacher(
+            req.session.user.uuid,
+            req.query.id || "",
+            JSON.parse(req.query.range || "[]")
+          )
+        ).map((res) => res.dataValues),
       });
     }
   } catch (error) {

@@ -69,14 +69,39 @@ exports.createPaper = async (countConfig) => {
   return thePaper;
 };
 
-exports.getAll = async (usage) => {
+exports.getAll = async (usage, subject) => {
   const query =
     usage !== undefined
       ? {
           where: { type: usage === "true" ? 1 : 0 },
         }
       : {};
-  return await Paper.findAll(query);
+  if (subject !== undefined) {
+    console.log(subject);
+    const theSubject = await Subject.model.findAll({
+      where: {
+        id: subject,
+        ...query,
+      },
+    });
+    const hash = [];
+    const thePapers = (
+      await Promise.all(theSubject.map((subject) => subject.getPapers()))
+    )
+      .reduce((prev, current) => {
+        return [...prev, ...current];
+      }, [])
+      .reduce((prev, current) => {
+        if (hash.indexOf(current.id) < 0) {
+          return [...prev, current];
+        } else {
+          return prev;
+        }
+      }, []);
+    return thePapers;
+  } else {
+    return await Paper.findAll(query);
+  }
 };
 
 exports.getAllForTeacher = async (teacherId, usage) => {
@@ -87,16 +112,27 @@ exports.getAllForTeacher = async (teacherId, usage) => {
     },
   });
   const grantedCourse = await theTeacher.getCourses();
-  const theSubject = await Subject.model.findAll({
-    where: {
-      id: {
-        [Sequelize.Op.in]: Array.from(
-          new Set(grantedCourse.map((item) => item.dataValues.SubjectId))
-        ),
+  let theSubject;
+  if (subject !== "") {
+    theSubject = await Subject.model.findAll({
+      where: {
+        id: subject,
+        ...query,
       },
-      ...query,
-    },
-  });
+    });
+  } else {
+    theSubject = await Subject.model.findAll({
+      where: {
+        id: {
+          [Sequelize.Op.in]: Array.from(
+            new Set(grantedCourse.map((item) => item.dataValues.SubjectId))
+          ),
+        },
+        ...query,
+      },
+    });
+  }
+
   const hash = [];
   const thePapers = (
     await Promise.all(theSubject.map((subject) => subject.getPapers()))

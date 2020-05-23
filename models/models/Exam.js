@@ -8,6 +8,7 @@ const Paper = require("./Paper");
 const Student = require("./Student");
 const Course = require("./Course");
 const Teacher = require("./Teacher");
+const Subject = require("./Subject");
 
 const Task = require("../../schedule/index");
 
@@ -118,33 +119,107 @@ exports.detail = async (id) => {
   };
 };
 
-exports.getAll = async () => {
-  return await Exam.findAll();
+exports.getAll = async (id, range) => {
+  let query = {};
+  if (range instanceof Array && range.length === 2) {
+    console.log("here");
+    query = {
+      startAt: { [Sequelize.Op.gt]: range[0] },
+      endAt: { [Sequelize.Op.lt]: range[1] },
+    };
+  }
+  if (id !== undefined) {
+    const theSubject = await Subject.model.findOne({ where: { id } });
+    const thePapers = (await theSubject.getPapers()).map(
+      (item) => item.dataValues.id
+    );
+
+    return await Util.arraySyncFilter(
+      await Exam.findAll({ where: query }),
+      async (item) => {
+        let targetPaper;
+        try {
+          targetPaper = ((await item.getPaper()) || { dataValues: {} })
+            .dataValues.id;
+        } catch (error) {
+          targetPaper = "";
+        }
+
+        return thePapers.indexOf(targetPaper) >= 0;
+      }
+    );
+  } else {
+    return await Exam.findAll({ where: query });
+  }
 };
 
 exports.getAllForTeacher = async (teacherId) => {
+  let query = {};
+  if (range instanceof Array && range.length === 2) {
+    console.log("here");
+    query = {
+      startAt: { [Sequelize.Op.gt]: range[0] },
+      endAt: { [Sequelize.Op.lt]: range[1] },
+    };
+  }
   const theTeacher = await Teacher.model.findOne({
-    where: {
-      UserUuid: teacherId,
-    },
+    where: { UserUuid: teacherId },
   });
   const grantedCourse = await theTeacher.getCourses();
-  const hash = [];
-  const theExams = (
-    await Promise.all(grantedCourse.map((course) => course.getExams()))
-  )
-    .reduce((prev, current) => {
-      return [...prev, ...current];
-    }, [])
-    .reduce((prev, current) => {
-      if (hash.indexOf(current.id) < 0) {
-        return [...prev, current];
-      } else {
-        return prev;
-      }
-    }, []);
+  if (id !== undefined) {
+    const theSubject = await Subject.model.findOne({ where: { id } });
+    const thePapers = (await theSubject.getPapers()).map(
+      (item) => item.dataValues.id
+    );
 
-  return theExams;
+    const hash = [];
+    const theExams = (
+      await Promise.all(
+        grantedCourse.map((course) => course.getExams({ where: query }))
+      )
+    )
+      .reduce((prev, current) => {
+        return [...prev, ...current];
+      }, [])
+      .reduce((prev, current) => {
+        if (hash.indexOf(current.id) < 0) {
+          return [...prev, current];
+        } else {
+          return prev;
+        }
+      }, []);
+
+    return await Util.arraySyncFilter(theExams, async (item) => {
+      let targetPaper;
+      try {
+        targetPaper = ((await item.getPaper()) || { dataValues: {} }).dataValues
+          .id;
+      } catch (error) {
+        targetPaper = "";
+      }
+
+      return thePapers.indexOf(targetPaper) >= 0;
+    });
+  } else {
+    const hash = [];
+    const theExams = (
+      await Promise.all(
+        grantedCourse.map((course) => course.getExams({ where: query }))
+      )
+    )
+      .reduce((prev, current) => {
+        return [...prev, ...current];
+      }, [])
+      .reduce((prev, current) => {
+        if (hash.indexOf(current.id) < 0) {
+          return [...prev, current];
+        } else {
+          return prev;
+        }
+      }, []);
+
+    return theExams;
+  }
 };
 
 exports.prepare = async (examId) => {
