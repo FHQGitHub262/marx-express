@@ -243,6 +243,8 @@ exports.prepare = async (examId) => {
   ]);
 
   const thePaper = thePaperElement.dataValues;
+  console.log(thePaper);
+
   // 初始化limitr
   const limiter = JSON.parse(String(thePaper.limiter));
   const ratio = JSON.parse(thePaper.ratio);
@@ -312,6 +314,7 @@ exports.prepare = async (examId) => {
   }
 
   theQuestionsData = Util.arrayGroupBy(theQuestionsData, (item) => item.type);
+
   const typeKeys = Object.keys(theQuestionsData);
   for (let i = 0; i < typeKeys.length; i++) {
     let groupByCourse = Util.arrayGroupBy(
@@ -353,7 +356,7 @@ exports.prepare = async (examId) => {
       single: "totalSingle",
       multi: "totalMulti",
     };
-
+    // #TODO
     for (let i = 0; i < typeKeys.length; i++) {
       const typeKey = typeKeys[i];
       const chapters = Object.keys(theQuestionsData[typeKey]);
@@ -361,13 +364,15 @@ exports.prepare = async (examId) => {
         .map((item, index) => {
           const chapterId = chapters[index];
           const difficults = Object.keys(item);
-
           const firstPick = difficults
             .map((_diff) => {
               const elem = item[_diff];
               return Util.arrayRandomPick(
                 elem,
-                data[typeKey][chapterId][exchange[_diff]].count
+                Math.max(
+                  data[typeKey][chapterId][exchange[_diff]].count,
+                  thePaper[nameExchange[_diff]]
+                )
               );
             })
             .reduce((prev, curr) => [...prev, ...curr], []);
@@ -417,6 +422,8 @@ exports.prepare = async (examId) => {
       })
     );
   });
+
+  console.log("Preper finished");
 };
 
 exports._prepare = async (examId) => {

@@ -23,24 +23,39 @@ router.get("/courses", async (req, res) => {
 
 router.get("/exams", async (req, res) => {
   const theExams = await Student.getExams(req.session.user.uuid, req.query.id);
+  console.log(theExams[0].dataValues.AnswerExam);
   res.json({
     success: true,
-    data: theExams.map((item) => item.dataValues),
+    data: theExams.map((item) => ({
+      ...item.dataValues,
+      status: item.dataValues.AnswerExam.status,
+    })),
   });
 });
 
 router.get("/paper", async (req, res) => {
   try {
     const exam = req.query.id;
-    const answerCache = await cache.hashGet(exam, [req.session.user.uuid]);
+    const answerCache = await cache.hashGet(exam, [
+      req.session.user.uuid,
+      `${req.session.user.uuid}_sum`,
+    ]);
+
     console.log(answerCache);
+
     const paper = require(path.resolve(
       __dirname,
       `../public/temp/${exam}/${req.session.user.uuid}.json`
     ));
+
     res.json({
       ...paper,
       current: answerCache[req.session.user.uuid],
+      sum: parseInt(answerCache[`${req.session.user.uuid}_sum`] || "0"),
+    });
+
+    cache.hashSet(exam, {
+      [`${req.session.user.uuid}_sync`]: Date.now(),
     });
   } catch (e) {
     console.log(e);
@@ -52,7 +67,19 @@ router.get("/paper", async (req, res) => {
 
 router.post("/backup", async (req, res) => {
   let backupValue = {};
+
+  const answerCache = await cache.hashGet(req.body.exam, [
+    `${req.session.user.uuid}_sync`,
+    `${req.session.user.uuid}_sum`,
+  ]);
+
+  const sync = parseInt(answerCache[`${req.session.user.uuid}_sync`]);
+  const sum = parseInt(answerCache[`${req.session.user.uuid}_sum`]);
+  console.log(sync, Date.now());
   backupValue[req.session.user.uuid] = JSON.stringify(req.body.data);
+  backupValue[`${req.session.user.uuid}_sync`] = Date.now();
+  backupValue[`${req.session.user.uuid}_sum`] = Date.now() - sync + (sum || 0);
+
   cache.hashSet(req.body.exam, backupValue);
   res.json({
     success: true,
@@ -60,33 +87,51 @@ router.post("/backup", async (req, res) => {
 });
 
 router.post("/finishup", async (req, res) => {
-  Exam.finishup(req.body.exam, req.session.user.uuid, req.body.data);
+  await Exam.finishup(req.body.exam, req.session.user.uuid, req.body.data);
+
   res.json({
     success: true,
+    answer: await Question.getAnswers(req.body.list),
   });
 });
 
 router.get("/review", async (req, res) => {
-  const theExams = await Exam.model.findOne({
-    where: {
-      id: req.query.exam,
-    },
-  });
-  const raw = JSON.parse(
-    (await Exam.getReview(req.query.exam, req.session.user.uuid))[0].raw
-  );
-  const questions = await Question.model.findAll({
-    attributes: ["id", "title", "right", "detail"],
-    where: {
-      id: {
-        [Sequelize.Op.in]: Object.values(raw).map((item) => Object.keys(item)),
+  try {
+    const theExams = await Exam.model.findOne({
+      where: {
+        id: req.query.exam,
       },
-    },
-  });
-  res.json({
-    success: true,
-    data: { raw, questions, exam: theExams.dataValues },
-  });
+    });
+    const raw = JSON.parse(
+      (await Exam.getReview(req.query.exam, req.session.user.uuid))[0].raw
+    );
+
+    console.log(raw);
+
+    const questions = await Question.model.findAll({
+      attributes: ["id", "title", "right", "detail"],
+      where: {
+        id: {
+          [Sequelize.Op.in]: Object.values(raw).reduce(
+            (prev, item) => [...prev, ...Object.keys(item)],
+            []
+          ),
+        },
+      },
+    });
+    res.json({
+      success: true,
+      data: { raw, questions, exam: theExams.dataValues },
+    });
+    // res.json({
+    //   success: true,
+    //   data: {},
+    // });
+  } catch (error) {
+    res.json({
+      success: false,
+    });
+  }
 });
 
 router.post("/password/reset", async (req, res) => {
@@ -105,6 +150,31 @@ router.post("/password/reset", async (req, res) => {
     res.json({
       success: false,
       ret: "服务器忙碌，请稍后再试",
+    });
+  }
+});
+
+router.post("/report", async (req, res) => {
+  try {
+    console.log(req.session.user);
+
+    const [theStudent, theExam] = await Promise.all([
+      Student.model.findOne({ where: { UserUuid: req.session.user.uuid } }),
+      Exam.model.findOne({ where: { id: req.body.exam } }),
+    ]);
+    await theExam.addStudent(theStudent, {
+      through: {
+        raw: JSON.stringify(req.body.raw),
+        status: "FIN",
+        grade: req.body.grade,
+      },
+    });
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
     });
   }
 });

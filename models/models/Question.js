@@ -247,4 +247,15 @@ exports.import = async (fileName, subjectId) => {
   // await targetChapter.addQuestions(questions);
 };
 
+exports.getAnswers = async (list) => {
+  return await Question.findAll({
+    where: {
+      id: {
+        [Sequelize.Op.in]: list,
+      },
+    },
+    attributes: ["id", "right"],
+  });
+};
+
 exports.model = Question;

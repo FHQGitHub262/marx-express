@@ -36,19 +36,16 @@ exports.getAll = async (config = {}) => {
 };
 
 exports.getCourse = async (studentId) => {
-  console.log(studentId);
   const theStudent = await Student.findOne({
-    where: {
-      UserUuid: studentId,
-    },
+    where: { UserUuid: studentId },
   });
-  if (theStudent)
+  if (theStudent) {
     return await theStudent
       .getCourses({
         where: { status: "active" },
       })
       .map((item) => item.dataValues);
-  else return [];
+  } else return [];
 };
 
 exports.getExams = async (studentId, courseId) => {
