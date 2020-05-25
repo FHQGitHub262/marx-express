@@ -102,11 +102,10 @@ router.get("/review", async (req, res) => {
         id: req.query.exam,
       },
     });
-    const raw = JSON.parse(
-      (await Exam.getReview(req.query.exam, req.session.user.uuid))[0].raw
-    );
+    const review = await Exam.getReview(req.query.exam, req.session.user.uuid);
+    const raw = JSON.parse(review[0].raw);
 
-    console.log(raw);
+    console.log(review, raw);
 
     const questions = await Question.model.findAll({
       attributes: ["id", "title", "right", "detail"],
