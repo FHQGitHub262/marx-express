@@ -4,11 +4,14 @@ const Sequelize = require("sequelize");
 const Util = require(path.resolve(__dirname, "../util"));
 const fs = require("fs");
 
+const AdministrationClass = require("./AdministrationClass");
 const Paper = require("./Paper");
 const Student = require("./Student");
 const Course = require("./Course");
 const Teacher = require("./Teacher");
 const Subject = require("./Subject");
+const Major = require("./Major");
+const College = require("./College");
 
 const Task = require("../../schedule/index");
 
@@ -596,13 +599,53 @@ exports.galance = async (examId) => {
     thePaper.dataValues.totalSingle +
     thePaper.dataValues.totalMulti +
     thePaper.dataValues.totalTrueFalse;
-  console.log(thePaper);
-  const record = (await theExam.getStudents()).map((item) => ({
-    id: item.dataValues.UserUuid,
-    idNumber: item.dataValues.idNumber,
-    grade: item.dataValues.AnswerExam.grade,
-    name: item.dataValues.name,
+
+  const theAdClasses = [];
+  let record = (await theExam.getStudents()).map((item) => {
+    if (theAdClasses.indexOf(item.dataValues.AdministrationClassId) < 0) {
+      theAdClasses.push(item.dataValues.AdministrationClassId);
+    }
+    return {
+      id: item.dataValues.UserUuid,
+      idNumber: item.dataValues.idNumber,
+      grade: item.dataValues.AnswerExam.grade,
+      name: item.dataValues.name,
+      AdministrationClassId: item.dataValues.AdministrationClassId,
+    };
+  });
+
+  const theClasses = (
+    await Promise.all(
+      await AdministrationClass.model.findAll({
+        where: { id: { [Sequelize.Op.in]: theAdClasses } },
+      })
+    )
+  ).reduce(
+    (prev, item) => ({
+      ...prev,
+      [item.dataValues.id]: item.dataValues,
+    }),
+    {}
+  );
+
+  const theMajors = await getMajors(
+    Array.from(new Set(Object.values(theClasses).map((item) => item.MajorId)))
+  );
+
+  const theColleges = await getColleges(
+    Array.from(new Set(Object.values(theMajors).map((item) => item.CollegeId)))
+  );
+
+  record = record.map((item) => ({
+    ...item,
+    class: theClasses[item.AdministrationClassId].name,
+    major: theMajors[theClasses[item.AdministrationClassId].MajorId].name,
+    college:
+      theColleges[
+        theMajors[theClasses[item.AdministrationClassId].MajorId].CollegeId
+      ].name,
   }));
+
   let statistics = {
     max: 0,
     pass: 0,
@@ -623,20 +666,50 @@ exports.galance = async (examId) => {
 exports.output = async (examId) => {
   var xlsx = require("node-xlsx").default;
 
-  const data = [["学号", "姓名", "分数"]];
+  const data = [["学号", "姓名", "分数", "学院", "专业", "班级"]];
 
   const theExam = await Exam.findOne({ where: { id: examId } });
 
-  const record = (await theExam.getStudents()).map((item) => [
-    // id: item.dataValues.UserUuid,
-    item.dataValues.idNumber,
-    item.dataValues.name,
-    item.dataValues.AnswerExam.grade,
-  ]);
+  const record = (await theExam.getStudents()).map((item) => ({
+    idNumber: item.dataValues.idNumber,
+    name: item.dataValues.name,
+    grade: item.dataValues.AnswerExam.grade || 0,
+    AdministrationClassId: item.dataValues.AdministrationClassId,
+  }));
+
+  const theClasses = await getClasses(
+    Array.from(new Set(record.map((item) => item.AdministrationClassId)))
+  );
+
+  const theMajors = await getMajors(
+    Array.from(new Set(Object.values(theClasses).map((item) => item.MajorId)))
+  );
+
+  const theColleges = await getColleges(
+    Array.from(new Set(Object.values(theMajors).map((item) => item.CollegeId)))
+  );
 
   return {
     name: theExam.dataValues.name,
-    buf: xlsx.build([{ name: "考试详情", data: [...data, ...record] }]),
+    buf: xlsx.build([
+      {
+        name: "考试详情",
+        data: [
+          ...data,
+          ...record.map((item) => [
+            item.idNumber,
+            item.name,
+            item.grade,
+            theColleges[
+              theMajors[theClasses[item.AdministrationClassId].MajorId]
+                .CollegeId
+            ].name,
+            theMajors[theClasses[item.AdministrationClassId].MajorId].name,
+            theClasses[item.AdministrationClassId].name,
+          ]),
+        ],
+      },
+    ]),
   }; // Returns a buffer
 };
 
@@ -746,5 +819,49 @@ exports.update = async (config) => {
   );
 
   return exam;
+};
+
+const getClasses = async (ids) => {
+  const major = (
+    await AdministrationClass.model.findAll({
+      where: { id: { [Sequelize.Op.in]: ids } },
+    })
+  ).reduce(
+    (prev, item) => ({
+      ...prev,
+      [item.dataValues.id]: item.dataValues,
+    }),
+    {}
+  );
+  return major;
+};
+
+const getMajors = async (ids) => {
+  const major = (
+    await Major.model.findAll({
+      where: { id: { [Sequelize.Op.in]: ids } },
+    })
+  ).reduce(
+    (prev, item) => ({
+      ...prev,
+      [item.dataValues.id]: item.dataValues,
+    }),
+    {}
+  );
+  return major;
+};
+
+const getColleges = async (ids) => {
+  return (
+    await College.model.findAll({
+      where: { id: { [Sequelize.Op.in]: ids } },
+    })
+  ).reduce(
+    (prev, item) => ({
+      ...prev,
+      [item.dataValues.id]: item.dataValues,
+    }),
+    {}
+  );
 };
 exports.model = Exam;

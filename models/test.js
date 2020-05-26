@@ -303,7 +303,8 @@ const init = async () => {
   //     console.log(res.slice(-5));
   //   }
   // );
-  Exam.prepare("3b56d941-f02c-4217-b524-8e862e5194db");
+  // Exam.prepare("3b56d941-f02c-4217-b524-8e862e5194db");
+  await Exam.output("3b56d941-f02c-4217-b524-8e862e5194db");
   // Exam.judge("3c1e4a6e-df25-4e58-89ba-ba9a2e81b6bd");
 };
 

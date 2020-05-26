@@ -98,6 +98,28 @@ exports.setDisable = async (range) => {
   );
 };
 
+exports.setNormal = async (range) => {
+  return await Question.update(
+    {
+      usage: false,
+    },
+    {
+      where: { id: { [Sequelize.Op.in]: range } },
+    }
+  );
+};
+
+exports.setUnNormal = async (range) => {
+  return await Question.update(
+    {
+      usage: true,
+    },
+    {
+      where: { id: { [Sequelize.Op.in]: range } },
+    }
+  );
+};
+
 exports.update = (id, newValue) => {
   return Question.findOne({
     where: { id },

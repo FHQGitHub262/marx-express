@@ -322,6 +322,49 @@ router.post("/questions/import", async (req, res) => {
   }
 });
 
+router.post("/question/normal", async (req, res) => {
+  try {
+    await Question.setNormal(req.body.range);
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.log("error", error);
+    res.json({
+      success: false,
+    });
+  }
+});
+
+router.post("/question/unnormal", async (req, res) => {
+  try {
+    await Question.setUnNormal(req.body.range);
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.log("error", error);
+    res.json({
+      success: false,
+    });
+  }
+});
+
+router.post("/question/edit", async (req, res) => {
+  try {
+    const { id, title, right, detail, difficult } = req.body;
+    await Question.model.update(
+      { id, title, right, detail, difficult },
+      { where: { id } }
+    );
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    res.json({ success: false });
+  }
+});
+
 router.get("/exams", async (req, res) => {
   try {
     if (req.session.user.privilege.indexOf("admin") > 0) {
@@ -397,6 +440,7 @@ router.get("/exam/export", async (req, res) => {
       )
       .send(buf);
   } catch (error) {
+    console.log(error);
     res.status("500").end();
   }
 });
