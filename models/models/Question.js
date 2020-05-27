@@ -131,7 +131,17 @@ exports.detail = async (id) => {
   return target.dataValues;
 };
 
-exports.getAll = async (chapterId, type, forceEnable = false, forExam = "") => {
+exports.getAll = async (
+  chapterId,
+  type,
+  forceEnable = false,
+  forExam = "",
+  page = -1
+) => {
+  let limit = {};
+  if (page >= 0) {
+    (limit.limit = 50), (limit.offset = 50 * page);
+  }
   const chapter = await Chapter.model.findOne({
     where: { id: chapterId },
     // attributes: ["id", "title", "type", "usage"]
@@ -149,7 +159,33 @@ exports.getAll = async (chapterId, type, forceEnable = false, forExam = "") => {
     search.enable = true;
   }
 
-  return chapter.getQuestions({ where: search });
+  return chapter.getQuestions({ where: search, ...limit });
+};
+
+exports.countAll = async (
+  chapterId,
+  type,
+  forceEnable = false,
+  forExam = ""
+) => {
+  const chapter = await Chapter.model.findOne({
+    where: { id: chapterId },
+    // attributes: ["id", "title", "type", "usage"]
+  });
+
+  let search = {};
+  if (type) {
+    search.type = type;
+  }
+  if (forExam !== "") {
+    search.usage = forExam === "false" ? false : true;
+  }
+
+  if (forceEnable) {
+    search.enable = true;
+  }
+
+  return (await chapter.getQuestions({ where: search })).length;
 };
 
 exports.disable = (questionLists) => {

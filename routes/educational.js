@@ -275,6 +275,13 @@ router.get("/questions", async (req, res) => {
       req.query.id,
       req.query.type || undefined,
       req.query.forceEnabled,
+      req.query.forExam || "",
+      req.query.page || -1
+    ),
+    total: await Question.countAll(
+      req.query.id,
+      req.query.type || undefined,
+      req.query.forceEnabled,
       req.query.forExam || ""
     ),
   });
