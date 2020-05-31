@@ -74,6 +74,8 @@ exports.create = async (config) => {
     exam.setStudents(students, {
       through: {
         status: "BEFORE",
+        grade: 0,
+        raw: "{}",
       },
     }),
     exam.setCourses(courses),
@@ -760,6 +762,8 @@ exports.update = async (config) => {
     exam.setStudents(students, {
       through: {
         status: "BEFORE",
+        grade: 0,
+        raw: "{}",
       },
     }),
     exam.setCourses(courses),

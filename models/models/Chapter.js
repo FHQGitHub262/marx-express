@@ -12,8 +12,8 @@ Chapter.init(
     id: {
       type: Sequelize.STRING(100),
       primaryKey: true,
-      unique: true
-    }
+      unique: true,
+    },
   },
   { sequelize, modelName: "Chapter" }
 );
@@ -21,23 +21,24 @@ Chapter.init(
 exports.create = async (name, subjectId) => {
   const subject = await Subject.model.findOne({
     where: {
-      id: subjectId
-    }
+      id: subjectId,
+    },
   });
   await subject.update({
-    majorNum: subject.dataValues.majorNum + 1
+    majorNum: subject.dataValues.majorNum + 1,
   });
   return await subject.createChapter({
     name,
-    id: Util.uuid()
+    id: Util.uuid(),
   });
 };
 
-exports.getAll = async subjectId => {
+exports.getAll = async (subjectId) => {
   const subject = await Subject.model.findOne({
     where: {
-      id: subjectId
-    }
+      id: subjectId,
+    },
+    order: [["createdAt", "ASC"]],
   });
   return await subject.getChapters();
 };
