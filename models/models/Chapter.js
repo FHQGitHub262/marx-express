@@ -38,8 +38,9 @@ exports.getAll = async (subjectId) => {
     where: {
       id: subjectId,
     },
+  });
+  return await subject.getChapters({
     order: [["createdAt", "DESC"]],
   });
-  return await subject.getChapters();
 };
 exports.model = Chapter;
