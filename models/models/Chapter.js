@@ -40,7 +40,7 @@ exports.getAll = async (subjectId) => {
     },
   });
   return await subject.getChapters({
-    order: [["createdAt", "DESC"]],
+    order: [["createdAt", "ASC"]],
   });
 };
 exports.model = Chapter;
