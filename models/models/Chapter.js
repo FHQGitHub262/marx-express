@@ -38,7 +38,7 @@ exports.getAll = async (subjectId) => {
     where: {
       id: subjectId,
     },
-    order: [["createdAt", "ASC"]],
+    order: [["createdAt", "DESC"]],
   });
   return await subject.getChapters();
 };
