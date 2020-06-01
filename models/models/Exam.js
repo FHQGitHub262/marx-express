@@ -372,6 +372,9 @@ exports.prepare = async (examId) => {
           const firstPick = difficults
             .map((_diff) => {
               const elem = item[_diff];
+              if (elem === undefined || Object.keys(elem).length === 0) {
+                return [];
+              }
               return Util.arrayRandomPick(
                 elem,
                 Math.max(
