@@ -367,6 +367,7 @@ exports.prepare = async (examId) => {
       const chapters = Object.keys(theQuestionsData[typeKey]);
       raw[typeKey] = Object.values(theQuestionsData[typeKey])
         .map((item, index) => {
+          console.log(item);
           const chapterId = chapters[index];
           const difficults = Object.keys(item);
           const firstPick = difficults
