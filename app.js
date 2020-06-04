@@ -70,7 +70,11 @@ app.post("/upload", upload.single("recfile"), (req, res) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "./public")));
+app.use(
+  express.static(path.join(__dirname, "./public"), {
+    maxAge: 24 * 60 * 60 * 1000 * 7,
+  })
+);
 // app.use("*", function(req, res, next) {
 //   if (!req.session.user) {
 //     res.redirect("/");
