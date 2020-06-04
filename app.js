@@ -6,7 +6,9 @@ var cookieParser = require("cookie-parser");
 const models = require("./models/index");
 const tasks = require("./schedule/tasks");
 const db = require("./models/db");
-db.sync().then(() => {
+db.sync({
+  // alter: true,
+}).then(() => {
   console.log("[ORM]", "Data inited");
   models.User.createUser("admin", 10000, ["admin"], "系统管理员");
 });
@@ -43,10 +45,13 @@ app.use(logger("dev"));
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads/");
+    if (file.mimetype.indexOf("image") >= 0) {
+      cb(null, "./public/");
+    } else {
+      cb(null, "./uploads/");
+    }
   },
   filename: function (req, file, cb) {
-    console.log();
     cb(null, Date.now() + "-" + file.originalname);
   },
 });
@@ -65,7 +70,7 @@ app.post("/upload", upload.single("recfile"), (req, res) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "./public")));
 // app.use("*", function(req, res, next) {
 //   if (!req.session.user) {
 //     res.redirect("/");

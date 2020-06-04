@@ -9,23 +9,27 @@ class Subject extends Sequelize.Model {}
 Subject.init(
   {
     name: Sequelize.STRING(100),
+    pic: Sequelize.TEXT(),
     id: {
       type: Sequelize.STRING(100),
       primaryKey: true,
-      unique: true
+      unique: true,
     },
     majorNum: {
-      type: Sequelize.INTEGER()
-    }
+      type: Sequelize.INTEGER(),
+    },
   },
   { sequelize, modelName: "Subject" }
 );
 
-exports.create = name => {
+// Subject.sync({ alter: true });
+
+exports.create = (name, url = "") => {
   return Subject.create({
     name,
+    pic: url,
     id: Util.uuid(),
-    majorNum: 0
+    majorNum: 0,
   });
 };
 
@@ -35,21 +39,21 @@ exports.getAll = () => {
   });
 };
 
-exports.getAllForTeacher = async teacherId => {
+exports.getAllForTeacher = async (teacherId) => {
   const theTeacher = await Teacher.model.findOne({
     where: {
-      UserUuid: teacherId
-    }
+      UserUuid: teacherId,
+    },
   });
   const grantedCourse = await theTeacher.getCourses();
   const theSubject = await Subject.findAll({
     where: {
       id: {
         [Sequelize.Op.in]: Array.from(
-          new Set(grantedCourse.map(item => item.dataValues.SubjectId))
-        )
-      }
-    }
+          new Set(grantedCourse.map((item) => item.dataValues.SubjectId))
+        ),
+      },
+    },
   });
   return theSubject;
 };

@@ -17,6 +17,7 @@ router.get("/courses", async (req, res) => {
       data: await Student.getCourse(req.session.user.uuid),
     });
   } catch (error) {
+    console.log(error);
     res.json({ success: false });
   }
 });

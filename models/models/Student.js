@@ -3,6 +3,7 @@ const Sequelize = require("sequelize");
 const User = require("./User");
 const Course = require("./Course");
 const College = require("./College");
+const Subject = require("./Subject");
 const Major = require("./Major");
 const AdministrationClass = require("./AdministrationClass");
 
@@ -40,11 +41,23 @@ exports.getCourse = async (studentId) => {
     where: { UserUuid: studentId },
   });
   if (theStudent) {
-    return await theStudent
-      .getCourses({
-        where: { status: "active" },
-      })
-      .map((item) => item.dataValues);
+    return await Promise.all(
+      (
+        await theStudent.getCourses({
+          where: { status: "active" },
+        })
+      ).map(async (item) => ({
+        ...item.dataValues,
+        pic: (
+          await Subject.model.findOne({
+            where: {
+              id: item.dataValues.SubjectId,
+            },
+            attributes: ["pic"],
+          })
+        ).dataValues.pic,
+      }))
+    );
   } else return [];
 };
 

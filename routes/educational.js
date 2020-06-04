@@ -72,7 +72,7 @@ router.get("/subjects", async (req, res) => {
 
 router.post("/createSubject", async (req, res) => {
   console.log(req.body);
-  const query = await Subject.create(req.body.name);
+  const query = await Subject.create(req.body.name, req.body.pic);
   // console.log(query);
   res.json({
     success: true,
