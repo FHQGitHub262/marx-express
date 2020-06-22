@@ -376,6 +376,7 @@ exports.prepare = async (examId) => {
               if (elem === undefined || Object.keys(elem).length === 0) {
                 return [];
               }
+              console.log(data[typeKey]);
               return Util.arrayRandomPick(
                 elem,
                 Math.max(
