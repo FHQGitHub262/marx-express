@@ -251,7 +251,8 @@ exports.prepare = async (examId) => {
   console.log(thePaper);
 
   // 初始化limitr
-  const limiter = JSON.parse(String(thePaper.limiter));
+  let limiter = JSON.parse(String(thePaper.limiter));
+  if (typeof limiter === "string") limiter = JSON.parse(limiter);
 
   const ratio = JSON.parse(thePaper.ratio);
   const total = Object.values(limiter).reduce(
