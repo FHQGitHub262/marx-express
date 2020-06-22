@@ -252,6 +252,7 @@ exports.prepare = async (examId) => {
 
   // 初始化limitr
   const limiter = JSON.parse(String(thePaper.limiter));
+
   const ratio = JSON.parse(thePaper.ratio);
   const total = Object.values(limiter).reduce(
     (prev, current) => prev + current,
@@ -368,7 +369,7 @@ exports.prepare = async (examId) => {
       const chapters = Object.keys(theQuestionsData[typeKey]);
       raw[typeKey] = Object.values(theQuestionsData[typeKey])
         .map((item, index) => {
-          console.log(item);
+          // console.log(item);
           const chapterId = chapters[index];
           const difficults = Object.keys(item);
           const firstPick = difficults
@@ -377,7 +378,7 @@ exports.prepare = async (examId) => {
               if (elem === undefined || Object.keys(elem).length === 0) {
                 return [];
               }
-              console.log(data[typeKey]);
+              // console.log(data[typeKey]);
               return Util.arrayRandomPick(
                 elem,
                 Math.max(
