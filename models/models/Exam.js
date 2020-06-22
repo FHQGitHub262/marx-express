@@ -264,6 +264,7 @@ exports.prepare = async (examId) => {
   for (let type of ["trueFalse", "single", "multi"]) {
     const totalValue = thePaper[totalName[index]];
     const chapters = Object.keys(limiter);
+    console.log(limiter);
     data[type] = chapters.reduce((prev, current) => {
       return {
         ...prev,
