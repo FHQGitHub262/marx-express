@@ -83,7 +83,8 @@ exports.create = async (config) => {
   // 创建定时任务，考试前一天prepare考试
   Task.scheduleToDo(
     "prepare_exam",
-    new Date(config.startAt).getTime() - 24 * 60 * 60 * 1000,
+    new Date().getTime(),
+    // new Date(config.startAt).getTime() - 24 * 60 * 60 * 1000,
     JSON.stringify({
       id: exam.dataValues.id,
     })
@@ -676,7 +677,7 @@ exports.galance = async (examId) => {
 exports.output = async (examId) => {
   var xlsx = require("node-xlsx").default;
 
-  const data = [["学号", "姓名", "分数", "学院", "专业", "班级"]];
+  const data = [["学号", "姓名", "分数", "考试名称", "学院", "专业", "班级"]];
 
   const theExam = await Exam.findOne({ where: { id: examId } });
 
@@ -710,6 +711,7 @@ exports.output = async (examId) => {
             item.idNumber,
             item.name,
             item.grade,
+            theExam.dataValues.name,
             theColleges[
               theMajors[theClasses[item.AdministrationClassId].MajorId]
                 .CollegeId
@@ -717,6 +719,65 @@ exports.output = async (examId) => {
             theMajors[theClasses[item.AdministrationClassId].MajorId].name,
             theClasses[item.AdministrationClassId].name,
           ]),
+        ],
+      },
+    ]),
+  }; // Returns a buffer
+};
+
+exports.batchoutput = async (examIds) => {
+  var xlsx = require("node-xlsx").default;
+
+  const data = [["学号", "姓名", "分数", "考试名称", "学院", "专业", "班级"]];
+
+  const theExams = await Exam.findAll({
+    where: { id: { [Sequelize.Op.in]: examIds } },
+  });
+
+  let yields = theExams.map(async (theExam) => {
+    const record = (await theExam.getStudents()).map((item) => ({
+      idNumber: item.dataValues.idNumber,
+      name: item.dataValues.name,
+      grade: item.dataValues.AnswerExam.grade || 0,
+      AdministrationClassId: item.dataValues.AdministrationClassId,
+    }));
+
+    const theClasses = await getClasses(
+      Array.from(new Set(record.map((item) => item.AdministrationClassId)))
+    );
+
+    const theMajors = await getMajors(
+      Array.from(new Set(Object.values(theClasses).map((item) => item.MajorId)))
+    );
+
+    const theColleges = await getColleges(
+      Array.from(
+        new Set(Object.values(theMajors).map((item) => item.CollegeId))
+      )
+    );
+
+    return record.map((item) => [
+      item.idNumber,
+      item.name,
+      item.grade,
+      theExam.dataValues.name,
+      theColleges[
+        theMajors[theClasses[item.AdministrationClassId].MajorId].CollegeId
+      ].name,
+      theMajors[theClasses[item.AdministrationClassId].MajorId].name,
+      theClasses[item.AdministrationClassId].name,
+    ]);
+  });
+
+  const rowData = await Promise.all(yields);
+  return {
+    name: `批量导出成绩 - ${new Date().toLocaleDateString()}`,
+    buf: xlsx.build([
+      {
+        name: "考试详情",
+        data: [
+          ...data,
+          ...rowData.reduce((prev, item) => [...prev, ...item], []),
         ],
       },
     ]),
@@ -777,14 +838,14 @@ exports.update = async (config) => {
     exam.setCourses(courses),
   ]);
 
-  // 取消定时任务
-  Task.cancelToDo(
-    "prepare_exam",
-    new Date(prevStart).getTime() - 24 * 60 * 60 * 1000,
-    JSON.stringify({
-      id: exam.dataValues.id,
-    })
-  );
+  // // 取消定时任务
+  // Task.cancelToDo(
+  //   "prepare_exam",
+  //   new Date(prevStart).getTime() - 24 * 60 * 60 * 1000,
+  //   JSON.stringify({
+  //     id: exam.dataValues.id,
+  //   })
+  // );
 
   // 创建定时任务，考试结束后1min，judge考试
   Task.cancelToDo(
@@ -806,7 +867,8 @@ exports.update = async (config) => {
   // 创建定时任务，考试前一天prepare考试
   Task.scheduleToDo(
     "prepare_exam",
-    new Date(config.startAt).getTime() - 24 * 60 * 60 * 1000,
+    // new Date(config.startAt).getTime() - 24 * 60 * 60 * 1000,
+    new Date(config.startAt).getTime(),
     JSON.stringify({
       id: exam.dataValues.id,
     })

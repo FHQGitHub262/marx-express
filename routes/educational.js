@@ -452,6 +452,22 @@ router.get("/exam/export", async (req, res) => {
   }
 });
 
+router.get("/exam/batchexport", async (req, res) => {
+  try {
+    const { buf, name } = await Exam.batchoutput(req.query.id);
+    res
+      .set(
+        "Content-Disposition",
+        "attachment;filename=" +
+          require("urlencode")(`${name || "考试详情"}.xlsx`, "utf-8")
+      )
+      .send(buf);
+  } catch (error) {
+    console.log(error);
+    res.status("500").end();
+  }
+});
+
 router.get("/exam/detail", async (req, res) => {
   try {
     res.json({
