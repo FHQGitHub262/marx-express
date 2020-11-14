@@ -86,40 +86,43 @@ exports.import = async (fileName, collegeId) => {
   const belongsTable = {};
   const studentPrivi = JSON.stringify(["student"]);
   const raw = file.reduce((prev, current) => {
-    return [
-      ...prev,
-      ...(current.data || []).flatMap((item, index) => {
-        if (index === 0) return [];
-        const [collegeName, majorName, className, name, idNumber] = item;
-        const id = Util.uuid();
-        if (!classTable[majorName]) {
-          classTable[majorName] = [];
-        }
+    console.log(current.data);
+    const data = (current.data || []).reduce((prev, item, index) => {
+      if (index === 0) return prev;
+      const [collegeName, majorName, className, name, idNumber] = item;
+      const id = Util.uuid();
+      if (!classTable[majorName]) {
+        classTable[majorName] = [];
+      }
 
-        if (classTable[majorName].indexOf(className) < 0) {
-          classTable[majorName].push(className);
-        }
-        if (!belongsTable[className]) {
-          belongsTable[className] = [];
-        }
+      if (classTable[majorName].indexOf(className) < 0) {
+        classTable[majorName].push(className);
+      }
+      if (!belongsTable[className]) {
+        belongsTable[className] = [];
+      }
 
-        belongsTable[className].push(idNumber);
+      belongsTable[className].push(idNumber);
 
-        return {
+      return [
+        ...prev,
+        {
           uuid: id,
           name,
           idnumber: Number(idNumber),
           passwd: "123456",
           privilege: studentPrivi,
-        };
-      }),
-    ];
+        },
+      ];
+    }, []);
+    console.log(data);
+    return [...prev, ...data];
   }, []);
-
+  console.log(1, raw.splice(20));
   const theUsers = await User.model.bulkCreate(raw, {
     updateOnDuplicate: ["idnumber"],
   });
-
+  console.log(2);
   const rawStudent = raw.reduce((prev, item) => {
     return {
       ...prev,
@@ -129,18 +132,18 @@ exports.import = async (fileName, collegeId) => {
       },
     };
   }, {});
-
+  console.log(3);
   const studentMerge = theUsers.map((user) => ({
     UserUuid: user.dataValues.uuid,
     ...rawStudent[user.dataValues.uuid],
   }));
-
+  console.log(4);
   await Student.bulkCreate(studentMerge, { updateOnDuplicate: ["name"] });
-
+  console.log(5);
   const targetCollege = await College.model.findOne({
     where: { id: collegeId },
   });
-
+  console.log(6);
   // 创建所需的专业、班级
   const majorNames = Object.keys(classTable);
   for (let i = 0; i < majorNames.length; i++) {
@@ -166,11 +169,11 @@ exports.import = async (fileName, collegeId) => {
       });
 
       if (targetClass.length === 0) {
-        AdministrationClass.createClass(className, theMajor.dataValues.id);
+        await AdministrationClass.createClass(className, theMajor.dataValues.id);
       }
     }
   }
-
+  console.log(7);
   // 关联班级和学生
   for (let i = 0; i < Object.keys(belongsTable).length; i++) {
     let className = Object.keys(belongsTable)[i];
