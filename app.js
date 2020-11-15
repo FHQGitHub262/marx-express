@@ -34,7 +34,7 @@ app.use(
       client: cache,
       prefix: "session",
     }),
-    secret: "keyboard cat",
+    secret: "marx",
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false },
