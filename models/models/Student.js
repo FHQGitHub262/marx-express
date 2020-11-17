@@ -118,7 +118,7 @@ exports.import = async (fileName, collegeId) => {
     console.log(data);
     return [...prev, ...data];
   }, []);
-  console.log(1, raw.splice(20));
+  // console.log(1, raw.splice(20));
   const theUsers = await User.model.bulkCreate(raw, {
     updateOnDuplicate: ["idnumber"],
   });

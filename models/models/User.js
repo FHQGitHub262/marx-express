@@ -1,6 +1,7 @@
 const path = require("path");
 const sequelize = require(path.resolve(__dirname, "../db"));
 const Sequelize = require("sequelize");
+const { STRING } = require("sequelize");
 const Util = require(path.resolve(__dirname, "../util"));
 
 class User extends Sequelize.Model {}
@@ -12,7 +13,7 @@ User.init(
       unique: true,
     },
     passwd: Sequelize.STRING(100),
-    idnumber: { type: Sequelize.INTEGER(4), unique: true },
+    idnumber: { type: STRING(100), unique: true },
     privilege: Sequelize.STRING(100),
     name: Sequelize.STRING(16),
   },
