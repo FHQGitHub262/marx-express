@@ -51,4 +51,5 @@ var configForMarx = {
   redisTick: 10,
 };
 
-module.exports = configForMarx;
+// module.exports = configForMarx;
+module.exports = configForTest;
