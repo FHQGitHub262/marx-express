@@ -53,11 +53,18 @@ router.post("/login", async (req, res) => {
 
 router.post("/resetPassword", async (req, res) => {
   // #TODO 去掉对应登录态
-  const result = await User.resetPassword(req.body.uuid);
-  console.log(result);
-  res.json({
-    success: true,
-  });
+  try {
+    const result = await User.resetPassword(req.body.uuid);
+    console.log(result);
+    res.json({
+      success: true,
+    });    
+  } catch (error) {
+    res.json({
+      success: false
+    })
+  }
+
 });
 
 router.post("/set_admin", async (req, res) => {

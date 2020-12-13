@@ -7,7 +7,7 @@ const Student = require("./Student");
 
 const Op = Sequelize.Op;
 
-class AdministrationClass extends Sequelize.Model {}
+class AdministrationClass extends Sequelize.Model { }
 AdministrationClass.init(
   {
     name: Sequelize.STRING(100),
@@ -58,7 +58,24 @@ exports.addStudents = async (classId, studentList) => {
       },
     },
   });
+  console.log(students)
   return theClass.setStudents(students);
+};
+
+exports.addStudent = async (classId, uuid) => {
+  const theClass = await AdministrationClass.findOne({
+    where: {
+      id: classId,
+    },
+  });
+  console.log(classId, uuid)
+  const students = await Student.model.findOne({
+    where: {
+      UserUuid: uuid
+    },
+  });
+  console.log(students)
+  return theClass.addStudent(students);
 };
 
 exports.model = AdministrationClass;

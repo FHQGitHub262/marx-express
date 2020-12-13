@@ -11,7 +11,7 @@ const xlsx = require("node-xlsx").default;
 const path = require("path");
 const Util = require(path.resolve(__dirname, "../util"));
 
-class Student extends Sequelize.Model {}
+class Student extends Sequelize.Model { }
 Student.init(
   {
     name: Sequelize.STRING(100),
@@ -21,15 +21,21 @@ Student.init(
 );
 
 exports.createStudent = async (password, idNumber, name) => {
-  const [user, student] = await Promise.all([
-    User.createUser(password, idNumber, ["student"], name),
-    await Student.create({
-      name,
-      idNumber,
-    }),
-  ]);
-  console.log("gere", user.dataValues);
-  return await student.setUser(user);
+  const user = await
+    User.createUser(password, idNumber, ["student"], name)
+  const student = await
+    Student.findOrCreate({
+      where: {
+        idNumber
+      }, defaults: {
+        name,
+        idNumber,
+        UserUuid: user.uuid
+      }
+    })
+
+  console.log("gere", user.dataValues, student);
+  return user.dataValues
 };
 
 exports.getAll = async (config = {}) => {

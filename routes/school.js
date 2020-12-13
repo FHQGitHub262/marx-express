@@ -84,4 +84,20 @@ router.post("/student/import", async (req, res) => {
   }
 });
 
+router.post("/student/add", async (req, res) => {
+  try {
+    const userVO = await Student.createStudent('123456', req.body.id, req.body.name)
+    console.log(userVO)
+    await AdministrationClass.addStudent(req.body.classId, userVO.uuid)
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+    });
+  }
+});
+
 module.exports = router;
