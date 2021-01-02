@@ -53,5 +53,18 @@ var configForMarx = {
   redisTick: 10,
 };
 
+let configToUse
+
+switch (process.env.NODE_ENV) {
+  case 'dev':
+    configToUse = configForTest
+    console.log('[Config]', 'Use DEV')
+    break
+  default:
+    configToUse = configForMarx
+    console.log('[Config]', 'Use PROD')
+    break
+}
+
 // module.exports = configForMarx;
-module.exports = configForTest;
+module.exports = configToUse;
