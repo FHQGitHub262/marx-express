@@ -72,4 +72,4 @@ console.log(process.env.NODE_ENV)
 // }
 
 // module.exports = configForTest;
-module.exports = configToUse;
+module.exports = configForMarx;
