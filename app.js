@@ -28,6 +28,7 @@ const clientRouter = require("./routes/client");
 const app = express();
 app.use(cors(require("./config").cors));
 app.set("trust proxy", 2); // trust first proxy
+app.use(cookieParser());
 app.use(
   session({
     store: new RedisStore({
@@ -69,7 +70,6 @@ app.post("/upload", upload.single("recfile"), (req, res) => {
 });
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(
   express.static(path.join(__dirname, "./public"), {
     maxAge: 24 * 60 * 60 * 1000 * 7,
