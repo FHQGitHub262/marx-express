@@ -71,5 +71,5 @@ console.log(process.env.NODE_ENV)
 //     break
 // }
 
-module.exports = configForTest;
-// module.exports = configToUse;
+// module.exports = configForTest;
+module.exports = configToUse;
