@@ -38,7 +38,7 @@ app.use(
     secret: "marx",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false, sameSite: 'lax' },
+    cookie: { secure: false, sameSite: 'none' },
   })
 );
 app.use(logger("dev"));
