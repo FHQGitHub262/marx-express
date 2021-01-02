@@ -38,7 +38,7 @@ var configForMarx = {
   password: "Mksyl123!@#",
   port: 3306,
   http: 4000,
-  redis: { host: "localhost", port: "6379", password: "zjsrumarx." },
+  redis: { host: "172.31.25.39", port: "6379", password: "zjsrumarx." },
   cors: {
     credentials: true,
     exposedHeaders: ["Content-Disposition"],
