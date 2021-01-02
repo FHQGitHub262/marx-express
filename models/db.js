@@ -17,7 +17,7 @@ try {
         idle: 30000,
       },
       timezone: "+08:00",
-      // logging: true,
+      logging: false,
     },
   );
 } catch (error) {
