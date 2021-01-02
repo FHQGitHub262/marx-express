@@ -1,14 +1,17 @@
 var configForTest = {
   dialect: "mysql",
   database: "marx",
+  // username: "root",
+  // password: "Ssq03230202",
+  // // password: "temppassword",
+  // host: "129.204.218.96:3306",
+  host: "172.31.25.39",
   username: "root",
-  password: "Ssq03230202",
-  // password: "temppassword",
-  host: "129.204.218.96:3306",
-  // host: "172.31.25.39:3306",
+  password: "Mksyl123!@#",
   port: 3306,
   http: 4000,
-  redis: { host: "129.204.218.96", port: "6380", password: "aptx4869" },
+  // redis: { host: "129.204.218.96", port: "6380", password: "aptx4869" },
+  redis: { host: "172.31.25.39", port: "6379", password: "zjsrumarx." },
   // redis: { host: "129.204.218.96", port: "6379", password: "zjsrumarx." },
   cors: {
     credentials: true,
@@ -30,9 +33,9 @@ var configForTest = {
 var configForMarx = {
   dialect: "mysql",
   database: "marx",
+  host: "172.31.25.39",
   username: "root",
   password: "Mksyl123!@#",
-  host: "localhost:3306",
   port: 3306,
   http: 4000,
   redis: { host: "localhost", port: "6379", password: "zjsrumarx." },
@@ -53,18 +56,20 @@ var configForMarx = {
   redisTick: 10,
 };
 
-let configToUse
+// let configToUse
 
-switch (process.env.NODE_ENV) {
-  case 'dev':
-    configToUse = configForTest
-    console.log('[Config]', 'Use DEV')
-    break
-  default:
-    configToUse = configForMarx
-    console.log('[Config]', 'Use PROD')
-    break
-}
+console.log(process.env.NODE_ENV)
 
-// module.exports = configForMarx;
-module.exports = configToUse;
+// switch (process.env.NODE_ENV) {
+//   case 'dev':
+//     configToUse = configForTest
+//     console.log('[Config]', 'Use DEV')
+//     break
+//   default:
+//     configToUse = configForMarx
+//     console.log('[Config]', 'Use PROD')
+//     break
+// }
+
+module.exports = configForTest;
+// module.exports = configToUse;
