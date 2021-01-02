@@ -26,6 +26,7 @@ const schoolRouter = require("./routes/school");
 const clientRouter = require("./routes/client");
 
 const app = express();
+app.set('view engine', 'html');
 app.use(cors(require("./config").cors));
 app.set("trust proxy", 2); // trust first proxy
 app.use(cookieParser());
