@@ -7,7 +7,7 @@ const Chapter = require("./Chapter");
 const Subject = require("./Subject");
 const xlsx = require("node-xlsx").default;
 
-class Question extends Sequelize.Model {}
+class Question extends Sequelize.Model { }
 Question.init(
   {
     id: {
@@ -61,10 +61,10 @@ exports.create = async (
     (async () => {
       return (await chapterId)
         ? Chapter.model.findOne({
-            where: {
-              id: chapterId,
-            },
-          })
+          where: {
+            id: chapterId,
+          },
+        })
         : undefined;
     })(),
   ]);
@@ -222,7 +222,9 @@ exports.import = async (fileName, subjectId) => {
     const data = (current.data || [])
       .filter(item => item.length && item.length > 0)
       .map((item, index) => {
+
         if (item.length === 0) return [];
+        if (item.filter(item => item !== "" && item !== undefined && item !== null).length === 0) return [];
         console.log(item);
         if (index === 0) return [];
         item[5] = String(item[5]);
@@ -241,8 +243,8 @@ exports.import = async (fileName, subjectId) => {
             String(item[6]) === "2"
               ? "trueFalse"
               : item[3].split("").length === 1
-              ? "single"
-              : "multi",
+                ? "single"
+                : "multi",
           detail: JSON.stringify(
             ["A", "B", "C", "D"].reduce((prev, choice, i) => {
               return {
