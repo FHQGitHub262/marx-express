@@ -93,7 +93,7 @@ exports.import = async (fileName, collegeId) => {
   const studentPrivi = JSON.stringify(["student"]);
   const raw = file.reduce((prev, current) => {
     console.log(current.data);
-    const data = (current.data || []).reduce((prev, item, index) => {
+    const data = (current.data || []).filter(item => item.length && item.length > 0).reduce((prev, item, index) => {
       if (index === 0) return prev;
       const [collegeName, majorName, className, name, idNumber] = item;
       const id = Util.uuid();
@@ -121,7 +121,7 @@ exports.import = async (fileName, collegeId) => {
         },
       ];
     }, []);
-    console.log(data);
+    // console.log(data);
     return [...prev, ...data];
   }, []);
   // console.log(1, raw.splice(20));

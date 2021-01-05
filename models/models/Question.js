@@ -220,6 +220,7 @@ exports.import = async (fileName, subjectId) => {
 
   const raw = file.reduce((prev, current) => {
     const data = (current.data || [])
+      .filter(item => item.length && item.length > 0)
       .map((item, index) => {
         if (item.length === 0) return [];
         console.log(item);
