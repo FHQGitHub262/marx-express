@@ -180,4 +180,11 @@ router.post("/report", async (req, res) => {
   }
 });
 
+router.get('/time', async (req, res) => {
+  res.json({
+    success: true,
+    data: Date.now()
+  });
+})
+
 module.exports = router;

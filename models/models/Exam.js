@@ -868,7 +868,7 @@ exports.update = async (config) => {
   Task.scheduleToDo(
     "prepare_exam",
     // new Date(config.startAt).getTime() - 24 * 60 * 60 * 1000,
-    new Date(config.startAt).getTime(),
+    Date.now(),
     JSON.stringify({
       id: exam.dataValues.id,
     })
