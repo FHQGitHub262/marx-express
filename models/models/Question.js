@@ -224,7 +224,11 @@ exports.import = async (fileName, subjectId) => {
       .map((item, index) => {
 
         if (item.length === 0) return [];
-        if (item.filter(item => item !== "" && item !== undefined && item !== null).length === 0) return [];
+        if (item.filter(elem => {
+          const NOT_NULL = elem !== "" && elem !== undefined && elem !== null
+          const NOT_EMPTY = typeof elem !== 'string' || String.prototype.trim(elem) !== ''
+          return NOT_NULL && NOT_EMPTY
+        }).length === 0) return [];
         console.log(item);
         if (index === 0) return [];
         item[5] = String(item[5]);
