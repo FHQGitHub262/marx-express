@@ -222,31 +222,41 @@ exports.import = async (fileName, subjectId) => {
     const data = (current.data || [])
       .filter(item => item.length && item.length > 0)
       .map((item, index) => {
-
         if (item.length === 0) return [];
         if (item.filter(elem => {
           const NOT_NULL = elem !== "" && elem !== undefined && elem !== null
-          const NOT_EMPTY = typeof elem !== 'string' || String.prototype.trim(elem) !== ''
+          const NOT_EMPTY = typeof elem !== 'string' || elem.trim() !== ''
           return NOT_NULL && NOT_EMPTY
         }).length === 0) return [];
         console.log(item);
         if (index === 0) return [];
-        item[5] = String(item[5]);
-        const id = Util.hashString(item[2]);
-        if (!belongsTable[item[0]]) belongsTable[item[0]] = [];
-        belongsTable[item[0]].push(id);
+
+        const [column, _, title, rightAnswerRaw, __, difficulty, choiceNum] = item.map(col => {
+          if (col.trim) return col.trim()
+          return item
+        })
+
+        const id = Util.hashString(title);
+
+        const rightAnswer = String(choiceNum) === "2"
+          ? [rightAnswerRaw === "A" ? "FALSE" : "TRUE"]
+          : String(rightAnswerRaw).split("")
+            .filter(item => item)
+            .filter(item => item.trim ? item.trim() : item)
+
+        if (!belongsTable[column]) {
+          belongsTable[column] = [];
+        }
+        belongsTable[column].push(id);
 
         return {
-          title: item[2],
-          right: JSON.stringify(
-            String(item[6]) === "2"
-              ? [item[3] === "A" ? "FALSE" : "TRUE"]
-              : String(item[3]).split("")
-          ),
+          id,
+          title,
+          right: JSON.stringify(rightAnswer),
           type:
-            String(item[6]) === "2"
+            String(choiceNum) === "2"
               ? "trueFalse"
-              : item[3].split("").length === 1
+              : rightAnswer.length === 1
                 ? "single"
                 : "multi",
           detail: JSON.stringify(
@@ -257,10 +267,9 @@ exports.import = async (fileName, subjectId) => {
               };
             }, {})
           ),
-          usage: Math.random() > 0.5,
+          usage: true,
           enable: true,
-          id,
-          difficult: item[5],
+          difficult: difficulty,
         };
       })
       .reduce((prev, curr) => {
@@ -273,13 +282,17 @@ exports.import = async (fileName, subjectId) => {
 
     return [...prev, ...data];
   }, []);
-  await Promise.all(
-    Util.arraySlice(raw, 50).map((data) =>
-      Question.bulkCreate(data, {
-        updateOnDuplicate: ["title", "right", "detail"],
-      })
-    )
-  );
+
+  console.log('raw', raw)
+
+  // console.log((await Promise.all(
+  //   Util.arraySlice(raw, 50).map((data) =>
+  //     Question.bulkCreate(data, {
+  //       updateOnDuplicate: ["title", "right", "detail", "type", 'usage'],
+  //     })
+  //   )
+  // )).map(item => item.map(e => e._changed)));
+  await Promise.all(raw.map(data => Question.upsert(data)))
 
   const targetSubject = await Subject.model.findOne({
     where: { id: subjectId },
