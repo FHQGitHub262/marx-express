@@ -649,7 +649,7 @@ exports.getDocx = async (examId, studentId) => {
           ...await prev,
           [curr]: {
             answer: raw.single[curr] || "未作答",
-            questionVO: await Question.model.findOne({ where: { id: curr } })
+            questionVO: await Question.model.findOne({ where: { id: curr }, raw: true })
           }
         }
       }, {}),
@@ -663,11 +663,11 @@ exports.getDocx = async (examId, studentId) => {
           ...await prev,
           [curr]: {
             answer: raw.multi[curr],
-            questionVO: await Question.model.findOne({ where: { id: curr } })
+            questionVO: await Question.model.findOne({ where: { id: curr }, raw: true })
           }
         }
       }, {}),
-      truefalse: (Array.from(new Set(
+      truefalse: await (Array.from(new Set(
         [
           ...Object.keys(raw.trueFalse || {}),
           ...paper.trueFalse.map(item => item.id)
@@ -677,7 +677,7 @@ exports.getDocx = async (examId, studentId) => {
           ...await prev,
           [curr]: {
             answer: raw.trueFalse[curr],
-            questionVO: await Question.model.findOne({ where: { id: curr } })
+            questionVO: await Question.model.findOne({ where: { id: curr }, raw: true })
           }
         }
       }, {}),
