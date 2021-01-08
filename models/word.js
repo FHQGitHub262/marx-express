@@ -1,7 +1,9 @@
 const { Document, Paragraph, Packer, TextRun } = require("docx");
 
 function renderAnswer(answer) {
-  if (String(answer).toUpperCase() === 'TRUE') {
+  if (answer === "undefined" || String(answer) === 'undefined') {
+    return "未作答"
+  } if (String(answer).toUpperCase() === 'TRUE') {
     return "正确"
   } else if (String(answer).toUpperCase() === 'FALSE') {
     return "错误"
