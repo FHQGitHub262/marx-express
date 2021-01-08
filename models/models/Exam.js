@@ -670,7 +670,7 @@ exports.getDocx = async (examId, studentId) => {
       truefalse: (Array.from(new Set(
         [
           ...Object.keys(raw.trueFalse || {}),
-          ...paper.trueFalse.map(ite).map(item => item.id)
+          ...paper.trueFalse.map(item).map(item => item.id)
         ])
       )).reduce(async (prev, curr) => {
         return {
