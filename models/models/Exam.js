@@ -622,6 +622,13 @@ exports.getDocx = async (examId, studentId) => {
   const theStudent = (await theExam.getStudents()).find(item => item.dataValues.UserUuid === studentId)
   const raw = JSON.parse(theStudent.dataValues.AnswerExam.raw)
 
+  console.log(Array.from(new Set(
+    [
+      ...Object.keys(raw.multi || {}),
+      ...paper.multi.map(item => item.id)
+    ])
+  ))
+
   const renderData = {
     user: {
       name: theStudent.name,
@@ -663,7 +670,7 @@ exports.getDocx = async (examId, studentId) => {
       truefalse: (Array.from(new Set(
         [
           ...Object.keys(raw.trueFalse || {}),
-          ...paper.trueFalse.map(item => item.id)
+          ...paper.trueFalse.map(ite).map(item => item.id)
         ])
       )).reduce(async (prev, curr) => {
         return {
