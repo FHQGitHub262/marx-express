@@ -15,9 +15,9 @@ Task.addEventListener("prepare_exam", (data) => {
 Task.addEventListener("cleanup_exam", (data) => {
   data = JSON.parse(data);
   // 删除缓存的卷子
-  require("../models/util").rmdir(
-    path.resolve(__dirname, "../public/temp", `./${data.id}`)
-  );
+  // require("../models/util").rmdir(
+  //   path.resolve(__dirname, "../public/temp", `./${data.id}`)
+  // );
   // 删除redis的内容，内存中的答卷缓存
   cache.hashDel(data.id);
 });
