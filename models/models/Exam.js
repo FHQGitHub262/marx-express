@@ -607,7 +607,13 @@ const judgeQuestion = (answer, raw) => {
 
 exports.getDocx = async (examId, studentId) => {
   const theExam = await Exam.findOne({ where: { id: examId } });
-  const thePaper = await theExam.getPaper();
+  let paper
+  try {
+    paper = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../public/temp', `./${examId}/${studentId}.json`))).paper
+  } catch (error) {
+    // paper = {}
+    paper = {}
+  }
 
   const theStudent = (await theExam.getStudents()).find(item => item.dataValues.UserUuid === studentId)
   const raw = JSON.parse(theStudent.dataValues.AnswerExam.raw)
@@ -622,11 +628,16 @@ exports.getDocx = async (examId, studentId) => {
       grade: theStudent.dataValues.AnswerExam.grade
     },
     paper: {
-      single: await Object.keys(raw.single || {}).reduce(async (prev, curr) => {
+      single: await (Array.from(new Set(
+        [
+          ...Object.keys(raw.single || {}),
+          ...paper.single.map(item => item.id)
+        ])
+      )).reduce(async (prev, curr) => {
         return {
           ...await prev,
           [curr]: {
-            answer: raw.single[curr],
+            answer: raw.single[curr] || "未作答",
             questionVO: await Question.model.findOne({ where: { id: curr } })
           }
         }

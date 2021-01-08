@@ -306,7 +306,7 @@ const init = async () => {
   // Exam.prepare("3b56d941-f02c-4217-b524-8e862e5194db");
   // await Exam.output("3b56d941-f02c-4217-b524-8e862e5194db");
   // Exam.judge("3c1e4a6e-df25-4e58-89ba-ba9a2e81b6bd");
-  Exam.getDocx("e4018f2b-f764-44ff-9068-f7ca33253d33", "820b2fa6-94c9-4027-80fb-3ae8443cbbd3")
+  Exam.getDocx("e4018f2b-f764-44ff-9068-f7ca33253d33", "d405289d-a2e2-41f4-8a14-6cd2a1cbd3f9")
     .then(({ buffer, studentName, name }) => {
       require('fs').writeFileSync('test.docx', buffer)
       console.log(studentName, name)
