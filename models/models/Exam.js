@@ -612,7 +612,11 @@ exports.getDocx = async (examId, studentId) => {
     paper = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../public/temp', `./${examId}/${studentId}.json`))).paper
   } catch (error) {
     // paper = {}
-    paper = {}
+    paper = {
+      single: [],
+      multi: [],
+      trueFalse: []
+    }
   }
 
   const theStudent = (await theExam.getStudents()).find(item => item.dataValues.UserUuid === studentId)
@@ -642,7 +646,12 @@ exports.getDocx = async (examId, studentId) => {
           }
         }
       }, {}),
-      multi: await Object.keys(raw.multi || {}).reduce(async (prev, curr) => {
+      multi: await (Array.from(new Set(
+        [
+          ...Object.keys(raw.multi || {}),
+          ...paper.multi.map(item => item.id)
+        ])
+      )).reduce(async (prev, curr) => {
         return {
           ...await prev,
           [curr]: {
@@ -651,7 +660,12 @@ exports.getDocx = async (examId, studentId) => {
           }
         }
       }, {}),
-      truefalse: await Object.keys(raw.trueFalse || {}).reduce(async (prev, curr) => {
+      truefalse: (Array.from(new Set(
+        [
+          ...Object.keys(raw.trueFalse || {}),
+          ...paper.trueFalse.map(item => item.id)
+        ])
+      )).reduce(async (prev, curr) => {
         return {
           ...await prev,
           [curr]: {
