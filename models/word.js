@@ -1,5 +1,4 @@
 const { Document, Paragraph, Packer, TextRun } = require("docx");
-const doc = new Document();
 
 function renderAnswer(answer) {
   if (String(answer).toUpperCase() === 'TRUE') {
@@ -12,6 +11,7 @@ function renderAnswer(answer) {
 }
 
 async function renderWord(data) {
+  const doc = new Document();
   const children = [
     new Paragraph({
       alignment: "center",
