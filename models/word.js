@@ -10,7 +10,7 @@ function renderAnswer(answer) {
   }
 }
 
-async function renderWord(data) {
+async function renderWord(data = '未作答') {
   const doc = new Document();
   const children = [
     new Paragraph({
