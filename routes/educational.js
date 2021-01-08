@@ -11,6 +11,7 @@ const Chapter = require("../models/models/Chapter");
 const Question = require("../models/models/Question");
 const Student = require("../models/models/Student");
 const Exam = require("../models/models/Exam");
+const { Router } = require("express");
 
 router.get("/teachers", async (req, res) => {
   try {
@@ -443,7 +444,7 @@ router.get("/exam/export", async (req, res) => {
       .set(
         "Content-Disposition",
         "attachment;filename=" +
-          require("urlencode")(`${name || "考试详情"}.xlsx`, "utf-8")
+        require("urlencode")(`${name || "考试详情"}.xlsx`, "utf-8")
       )
       .send(buf);
   } catch (error) {
@@ -459,7 +460,7 @@ router.get("/exam/batchexport", async (req, res) => {
       .set(
         "Content-Disposition",
         "attachment;filename=" +
-          require("urlencode")(`${name || "考试详情"}.xlsx`, "utf-8")
+        require("urlencode")(`${name || "考试详情"}.xlsx`, "utf-8")
       )
       .send(buf);
   } catch (error) {
@@ -479,6 +480,17 @@ router.get("/exam/detail", async (req, res) => {
     return error;
   }
 });
+
+router.get('/exam/word', async (req, res) => {
+  const { buffer, studentName, name } = await Exam.getDocx(req.query.id, req.query.userId)
+  res
+    .set(
+      "Content-Disposition",
+      "attachment;filename=" +
+      require("urlencode")(`${studentName}-${name || "考试"}.docx`, "utf-8")
+    )
+    .end(buffer);
+})
 
 router.post("/createExam", async (req, res) => {
   res.json({

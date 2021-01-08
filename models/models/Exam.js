@@ -12,10 +12,12 @@ const Teacher = require("./Teacher");
 const Subject = require("./Subject");
 const Major = require("./Major");
 const College = require("./College");
+const Question = require("./Question");
 
+const { renderWord } = require('../word')
 const Task = require("../../schedule/index");
 
-class Exam extends Sequelize.Model {}
+class Exam extends Sequelize.Model { }
 Exam.init(
   {
     name: Sequelize.STRING(100),
@@ -286,7 +288,7 @@ exports.prepare = async (examId) => {
             count: Math.ceil(
               (((totalValue * limiter[current]) / total) *
                 (ratio[1] - ratio[0])) /
-                10
+              10
             ),
             data: [],
           },
@@ -602,6 +604,56 @@ const judgeQuestion = (answer, raw) => {
     }
   }
 };
+
+exports.getDocx = async (examId, studentId) => {
+  const theExam = await Exam.findOne({ where: { id: examId } });
+  const thePaper = await theExam.getPaper();
+
+  const theStudent = (await theExam.getStudents()).find(item => item.dataValues.UserUuid === studentId)
+  const raw = JSON.parse(theStudent.dataValues.AnswerExam.raw)
+
+  const renderData = {
+    user: {
+      name: theStudent.name,
+      id: theStudent.idNumber
+    },
+    exam: {
+      name: theExam.dataValues.name,
+      grade: theStudent.dataValues.AnswerExam.grade
+    },
+    paper: {
+      single: await Object.keys(raw.single || {}).reduce(async (prev, curr) => {
+        return {
+          ...await prev,
+          [curr]: {
+            answer: raw.single[curr],
+            questionVO: await Question.model.findOne({ where: { id: curr } })
+          }
+        }
+      }, {}),
+      multi: await Object.keys(raw.multi || {}).reduce(async (prev, curr) => {
+        return {
+          ...await prev,
+          [curr]: {
+            answer: raw.multi[curr],
+            questionVO: await Question.model.findOne({ where: { id: curr } })
+          }
+        }
+      }, {}),
+      truefalse: await Object.keys(raw.trueFalse || {}).reduce(async (prev, curr) => {
+        return {
+          ...await prev,
+          [curr]: {
+            answer: raw.trueFalse[curr],
+            questionVO: await Question.model.findOne({ where: { id: curr } })
+          }
+        }
+      }, {}),
+    }
+  }
+
+  return { buffer: await renderWord(renderData), studentName: theStudent.name, name: theExam.dataValues.name }
+}
 
 exports.galance = async (examId) => {
   const theExam = await Exam.findOne({ where: { id: examId } });
