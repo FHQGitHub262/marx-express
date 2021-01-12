@@ -239,7 +239,7 @@ exports.import = async (fileName, subjectId) => {
         const id = Util.hashString(title);
 
         const rightAnswer = String(choiceNum) === "2"
-          ? [rightAnswerRaw === "A" ? "FALSE" : "TRUE"]
+          ? [rightAnswerRaw === "A" ? "TRUE" : "FALSE"]
           : String(rightAnswerRaw).split("")
             .filter(item => item)
             .filter(item => item.trim ? item.trim() : item)

@@ -546,6 +546,7 @@ exports.getReview = async (examId, studentId) => {
 
 exports.judge = async (examId) => {
   const theExam = await Exam.findOne({ where: { id: examId } });
+
   const thePaper = (await (await theExam.getPaper()).getQuestions())
     .map((item) => ({
       id: item.id,
@@ -560,7 +561,7 @@ exports.judge = async (examId) => {
       {}
     );
   const records = await theExam.getStudents();
-  records.forEach(async (item) => {
+  for (const item of records) {
     const raw = JSON.parse(item.dataValues.AnswerExam.raw || "{}");
     const answers = Object.values(raw).reduce(
       (prev, current) => ({
@@ -571,16 +572,16 @@ exports.judge = async (examId) => {
     );
 
     const grade = Object.keys(answers).reduce((prev, current) => {
-      console.log(answers[current], thePaper[current]);
+      // console.log(answers[current], thePaper[current], judgeQuestion(answers[current], thePaper[current]));
       return prev + judgeQuestion(answers[current], thePaper[current]);
     }, 0);
-
+    // console.log(item.dataValues.AnswerExam.grade, grade)
     await theExam.addStudent(item, {
       through: {
         grade,
       },
     });
-  });
+  }
 };
 
 const judgeQuestion = (answer, raw) => {
@@ -592,8 +593,20 @@ const judgeQuestion = (answer, raw) => {
       return String(answer).toUpperCase() === JSON.parse(raw.right)[0] ? 1 : 0;
     }
     case "multi": {
-      const answerList = Array.from(new Set(answer || []));
-      const rawList = Array.from(new Set(raw.right || []));
+      try {
+        if (typeof raw.right === 'string') {
+          raw.right = JSON.parse(raw.right)
+        }
+      } catch (error) {
+        return 1
+      }
+
+      const answerList = Array.from(new Set(answer || []))
+        .map((item) => item.toUpperCase())
+        .sort((a, b) => a.charCodeAt() - b.charCodeAt());
+      const rawList = Array.from(new Set(raw.right || []))
+        .map((item) => item.toUpperCase())
+        .sort((a, b) => a.charCodeAt() - b.charCodeAt());
       if (rawList.length !== answerList.length) return 0;
       for (let i = 0; i < answerList.length; i++) {
         if (rawList.indexOf(answerList[i]) < 0) {

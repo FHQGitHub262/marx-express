@@ -26,7 +26,9 @@ const testTeacher = "0404c6f0-4663-11ea-b9a7-4753c60a4738";
 // const model = require("./");
 const link = require("./db");
 const cache = require("./cache");
-
+const sequelize = require("./db");
+const Sequelize = require("sequelize");
+const Op = Sequelize.Op
 const init = async () => {
   /* 用户关系 */
   // Student是一种User
@@ -306,11 +308,32 @@ const init = async () => {
   // Exam.prepare("3b56d941-f02c-4217-b524-8e862e5194db");
   // await Exam.output("3b56d941-f02c-4217-b524-8e862e5194db");
   // Exam.judge("3c1e4a6e-df25-4e58-89ba-ba9a2e81b6bd");
-  Exam.getDocx("e4018f2b-f764-44ff-9068-f7ca33253d33", "d405289d-a2e2-41f4-8a14-6cd2a1cbd3f9")
-    .then(({ buffer, studentName, name }) => {
-      require('fs').writeFileSync('test.docx', buffer)
-      console.log(studentName, name)
-    })
+  // Exam.getDocx("e4018f2b-f764-44ff-9068-f7ca33253d33", "d405289d-a2e2-41f4-8a14-6cd2a1cbd3f9")
+  //   .then(({ buffer, studentName, name }) => {
+  //     require('fs').writeFileSync('test.docx', buffer)
+  //     console.log(studentName, name)
+  //   })
+
+  // 21.01.12 批量刷数据，把判断题的答案刷回来
+  // const data = await Question.model.findAll({
+  //   where: {
+  //     type: "trueFalse",
+  //     title: {
+  //       [Op.in]: [
+
+  //       ]
+  //     },
+  //   }
+  // })
+
+  // for (let questionVO of data) {
+  //   const updateResult = await questionVO.update({
+  //     right: JSON.stringify(['TRUE'])
+  //   })
+  // }
+
+  console.log('ok')
+  return
 };
 
 init();

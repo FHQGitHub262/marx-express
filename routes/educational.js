@@ -506,4 +506,11 @@ router.post("/updateExam", async (req, res) => {
   });
 });
 
+router.post('/exam/judge', async (req, res) => {
+  res.json({
+    success: true,
+    data: await Exam.judge(req.body.id)
+  })
+})
+
 module.exports = router;

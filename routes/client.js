@@ -43,11 +43,16 @@ router.get("/paper", async (req, res) => {
     ]);
 
     console.log(answerCache);
+    let paper
+    try {
+      paper = require(path.resolve(
+        __dirname,
+        `../public/temp/${exam}/${req.session.user.uuid}.json`
+      ));
+    } catch (error) {
+      paper = { exam: {}, paper: { "single": [], "multi": [], "trueFalse": [] } }
+    }
 
-    const paper = require(path.resolve(
-      __dirname,
-      `../public/temp/${exam}/${req.session.user.uuid}.json`
-    ));
 
     res.json({
       ...paper,
