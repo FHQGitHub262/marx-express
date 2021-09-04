@@ -111,7 +111,7 @@ exports.getAll = async (subjectId) => {
   });
   // console.log(subject);
   return subject.getCourses({
-    order: [['createdAt', 'ASC']]
+    order: [['createdAt', 'DESC']]
   });
 };
 
@@ -127,7 +127,7 @@ exports.getAllForTeacher = async (subjectId, teacherId) => {
     },
   });
   const teacherOwns = (await theTeacher.getCourses({
-    order: [['createdAt', 'ASC']]
+    order: [['createdAt', 'DESC']]
   })).map(
     (item) => item.dataValues.GrantCourse.CourseId
   );
@@ -145,7 +145,7 @@ exports.getExams = async (courseId) => {
     where: {
       id: courseId,
     },
-    order: [["createdAt", "ASC"]],
+    order: [["createdAt", "DESC"]],
   });
   return await theCourse.getExams();
 };

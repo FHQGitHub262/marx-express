@@ -39,7 +39,7 @@ exports.getAll = async collegeId => {
     where: {
       id: collegeId
     },
-    order: [["createdAt", "ASC"]],
+    order: [["createdAt", "DESC"]],
   });
   if (!college) {
     return [];

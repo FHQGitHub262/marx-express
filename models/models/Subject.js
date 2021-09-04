@@ -54,7 +54,7 @@ exports.getAllForTeacher = async (teacherId) => {
         ),
       },
     },
-    order: [["createdAt", "ASC"]],
+    order: [["createdAt", "DESC"]],
   });
   return theSubject;
 };

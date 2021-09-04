@@ -38,7 +38,7 @@ exports.getAll = async (majorId) => {
     where: {
       id: majorId,
     },
-    order: [["createdAt", "ASC"]],
+    order: [["createdAt", "DESC"]],
   });
   if (!major) {
     return [];

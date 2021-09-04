@@ -40,7 +40,7 @@ exports.createStudent = async (password, idNumber, name) => {
 exports.getAll = async (config = {}) => {
   return await Student.findAll({
     where: config,
-    order: [["createdAt", "ASC"]],
+    order: [["createdAt", "DESC"]],
   });
 };
 

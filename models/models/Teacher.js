@@ -24,7 +24,7 @@ exports.createTeacher = async (password, idNumber, name) => {
 exports.getAll = () => {
   return Teacher.findAll({
     attributes: ["idNumber", "name", "UserUuid"],
-    order: [["createdAt", "ASC"]],
+    order: [["createdAt", "DESC"]],
   });
 };
 
