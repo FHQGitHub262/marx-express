@@ -64,8 +64,21 @@ router.post("/resetPassword", async (req, res) => {
       success: false
     })
   }
-
 });
+
+router.post('/updatePassword', async (req, res) => {
+  try {
+    const result = await User.changePassword(req.body.uuid, req.body.password);
+    console.log(result);
+    res.json({
+      success: true,
+    });    
+  } catch (error) {
+    res.json({
+      success: false
+    })
+  }
+})
 
 router.post("/set_admin", async (req, res) => {
   try {

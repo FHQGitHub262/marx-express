@@ -73,7 +73,7 @@ exports.getAll = async (usage, subject) => {
   const query =
     usage !== undefined
       ? {
-          where: { type: usage === "true" ? 1 : 0 },
+          where: { type: usage === "true" ? true : false },
         }
       : {};
   if (subject !== undefined) {
@@ -83,7 +83,6 @@ exports.getAll = async (usage, subject) => {
         id: subject,
         ...query,
       },
-      order: [["createdAt", "DESC"]],
     });
     const hash = [];
     const thePapers = (
