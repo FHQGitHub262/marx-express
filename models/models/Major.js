@@ -38,7 +38,8 @@ exports.getAll = async collegeId => {
   const college = await College.model.findOne({
     where: {
       id: collegeId
-    }
+    },
+    order: [["createdAt", "ASC"]],
   });
   if (!college) {
     return [];

@@ -83,6 +83,7 @@ exports.getAll = async (usage, subject) => {
         id: subject,
         ...query,
       },
+      order: [["createdAt", "ASC"]],
     });
     const hash = [];
     const thePapers = (
@@ -100,7 +101,7 @@ exports.getAll = async (usage, subject) => {
       }, []);
     return thePapers;
   } else {
-    return await Paper.findAll(query);
+    return await Paper.findAll({ where: query, order: [["createdAt", "ASC"]] });
   }
 };
 
@@ -119,6 +120,7 @@ exports.getAllForTeacher = async (teacherId, usage) => {
         id: subject,
         ...query,
       },
+      order: [["createdAt", "ASC"]],
     });
   } else {
     theSubject = await Subject.model.findAll({
@@ -130,12 +132,15 @@ exports.getAllForTeacher = async (teacherId, usage) => {
         },
         ...query,
       },
+      order: [["createdAt", "ASC"]],
     });
   }
 
   const hash = [];
   const thePapers = (
-    await Promise.all(theSubject.map((subject) => subject.getPapers()))
+    await Promise.all(theSubject.map((subject) => subject.getPapers({
+      order: [["createdAt", "ASC"]],
+    })))
   )
     .reduce((prev, current) => {
       return [...prev, ...current];

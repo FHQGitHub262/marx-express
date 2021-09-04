@@ -143,7 +143,9 @@ exports.getAll = async (id, range) => {
     );
 
     return await Util.arraySyncFilter(
-      await Exam.findAll({ where: query }),
+      await Exam.findAll({ where: query, order: [
+        ["createdAt", 'desc']
+      ] }),
       async (item) => {
         let targetPaper;
         try {

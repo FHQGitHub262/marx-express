@@ -141,6 +141,7 @@ exports.getExams = async (courseId) => {
     where: {
       id: courseId,
     },
+    order: [["createdAt", "ASC"]],
   });
   return await theCourse.getExams();
 };

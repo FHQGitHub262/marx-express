@@ -11,7 +11,7 @@ const xlsx = require("node-xlsx").default;
 const path = require("path");
 const Util = require(path.resolve(__dirname, "../util"));
 
-class Student extends Sequelize.Model { }
+class Student extends Sequelize.Model {}
 Student.init(
   {
     name: Sequelize.STRING(100),
@@ -21,25 +21,27 @@ Student.init(
 );
 
 exports.createStudent = async (password, idNumber, name) => {
-  const user = await
-    User.createUser(password, idNumber, ["student"], name)
-  const student = await
-    Student.findOrCreate({
-      where: {
-        idNumber
-      }, defaults: {
-        name,
-        idNumber,
-        UserUuid: user.uuid
-      }
-    })
+  const user = await User.createUser(password, idNumber, ["student"], name);
+  const student = await Student.findOrCreate({
+    where: {
+      idNumber,
+    },
+    defaults: {
+      name,
+      idNumber,
+      UserUuid: user.uuid,
+    },
+  });
 
   console.log("gere", user.dataValues, student);
-  return user.dataValues
+  return user.dataValues;
 };
 
 exports.getAll = async (config = {}) => {
-  return await Student.findAll({ where: config });
+  return await Student.findAll({
+    where: config,
+    order: [["createdAt", "ASC"]],
+  });
 };
 
 exports.getCourse = async (studentId) => {
@@ -77,9 +79,9 @@ exports.getExams = async (studentId, courseId) => {
     through: {
       where: {
         ExamId: {
-          [Sequelize.Op.in]: (await Course.getExams(courseId)).map(
-            (item) => item.dataValues.id
-          ),
+          [Sequelize.Op.in]: (
+            await Course.getExams(courseId)
+          ).map((item) => item.dataValues.id),
         },
       },
     },
@@ -93,34 +95,36 @@ exports.import = async (fileName, collegeId) => {
   const studentPrivi = JSON.stringify(["student"]);
   const raw = file.reduce((prev, current) => {
     console.log(current.data);
-    const data = (current.data || []).filter(item => item.length && item.length > 0).reduce((prev, item, index) => {
-      if (index === 0) return prev;
-      const [collegeName, majorName, className, name, idNumber] = item;
-      const id = Util.uuid();
-      if (!classTable[majorName]) {
-        classTable[majorName] = [];
-      }
+    const data = (current.data || [])
+      .filter((item) => item.length && item.length > 0)
+      .reduce((prev, item, index) => {
+        if (index === 0) return prev;
+        const [collegeName, majorName, className, name, idNumber] = item;
+        const id = Util.uuid();
+        if (!classTable[majorName]) {
+          classTable[majorName] = [];
+        }
 
-      if (classTable[majorName].indexOf(className) < 0) {
-        classTable[majorName].push(className);
-      }
-      if (!belongsTable[className]) {
-        belongsTable[className] = [];
-      }
+        if (classTable[majorName].indexOf(className) < 0) {
+          classTable[majorName].push(className);
+        }
+        if (!belongsTable[className]) {
+          belongsTable[className] = [];
+        }
 
-      belongsTable[className].push(idNumber);
+        belongsTable[className].push(idNumber);
 
-      return [
-        ...prev,
-        {
-          uuid: id,
-          name,
-          idnumber: Number(idNumber),
-          passwd: "123456",
-          privilege: studentPrivi,
-        },
-      ];
-    }, []);
+        return [
+          ...prev,
+          {
+            uuid: id,
+            name,
+            idnumber: Number(idNumber),
+            passwd: "123456",
+            privilege: studentPrivi,
+          },
+        ];
+      }, []);
     // console.log(data);
     return [...prev, ...data];
   }, []);
@@ -175,7 +179,10 @@ exports.import = async (fileName, collegeId) => {
       });
 
       if (targetClass.length === 0) {
-        await AdministrationClass.createClass(className, theMajor.dataValues.id);
+        await AdministrationClass.createClass(
+          className,
+          theMajor.dataValues.id
+        );
       }
     }
   }

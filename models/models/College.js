@@ -26,7 +26,9 @@ exports.createCollege = name => {
 };
 
 exports.getAll = () => {
-  return College.findAll();
+  return College.findAll({
+    order: [["createdAt", "ASC"]],
+  });
 };
 
 exports.model = College;
