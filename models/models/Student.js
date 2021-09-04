@@ -79,7 +79,9 @@ exports.getExams = async (studentId, courseId) => {
     through: {
       where: {
         ExamId: {
-          [Sequelize.Op.in]: exams.map((item) => item.dataValues.id),
+          [Sequelize.Op.in]: (
+            await Course.getExams(courseId)
+          ).map((item) => item.dataValues.id),
         },
       },
     },
