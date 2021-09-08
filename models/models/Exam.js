@@ -637,6 +637,18 @@ exports.getDocx = async (examId, studentId) => {
   const theStudent = (await theExam.getStudents()).find(item => item.dataValues.UserUuid === studentId)
   const raw = JSON.parse(theStudent.dataValues.AnswerExam.raw)
 
+  if(!raw.single) {
+    raw.single = {}
+  }
+  if(!raw.multi) {
+    raw.multi = {}
+  }
+  if(!raw.trueFalse) {
+    raw.trueFalse = {}
+  }
+
+  console.log('RAW', raw)
+
   const renderData = {
     user: {
       name: theStudent.name,

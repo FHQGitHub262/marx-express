@@ -70,19 +70,16 @@ exports.createPaper = async (countConfig) => {
 };
 
 exports.getAll = async (usage, subject) => {
-  const query =
-    usage !== undefined
-      ? {
-          where: { type: usage === "true" ? true : false },
-        }
-      : {};
-  if (subject !== undefined) {
+  const query = usage !== undefined ? { type: usage === "true" ? 1 : 0 } : {};
+  console.log("subject", subject);
+  if (!!subject) {
     console.log(subject);
     const theSubject = await Subject.model.findAll({
       where: {
         id: subject,
         ...query,
       },
+      order: [["createdAt", "DESC"]],
     });
     const hash = [];
     const thePapers = (
@@ -100,7 +97,14 @@ exports.getAll = async (usage, subject) => {
       }, []);
     return thePapers;
   } else {
-    return await Paper.findAll({ where: query, order: [["createdAt", "DESC"]] });
+    console.log("here", {
+      where: { ...query },
+      order: [["createdAt", "DESC"]],
+    });
+    return await Paper.findAll({
+      where: { ...query },
+      order: [["createdAt", "DESC"]],
+    });
   }
 };
 
@@ -113,7 +117,7 @@ exports.getAllForTeacher = async (teacherId, usage) => {
   });
   const grantedCourse = await theTeacher.getCourses();
   let theSubject;
-  if (subject !== "") {
+  if (!!subject) {
     theSubject = await Subject.model.findAll({
       where: {
         id: subject,
@@ -137,9 +141,13 @@ exports.getAllForTeacher = async (teacherId, usage) => {
 
   const hash = [];
   const thePapers = (
-    await Promise.all(theSubject.map((subject) => subject.getPapers({
-      order: [["createdAt", "DESC"]],
-    })))
+    await Promise.all(
+      theSubject.map((subject) =>
+        subject.getPapers({
+          order: [["createdAt", "DESC"]],
+        })
+      )
+    )
   )
     .reduce((prev, current) => {
       return [...prev, ...current];
